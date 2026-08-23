@@ -46,7 +46,22 @@ export interface DocumentAuditLog {
   timestamp: string;
 }
 
-export interface DocumentItem {
+export interface DocumentVersion {
+  id?: string;
+  versionNumber: number;
+  originalFileName: string;
+  storedFileKey: string;
+  contentType?: string;
+  fileSizeBytes: number;
+  storageProvider?: StorageProviderType;
+  notes?: string;
+  authorName?: string;
+  createdAt: string;
+}
+
+export type WorkflowDocumentVersion = DocumentVersion;
+
+export interface WorkflowDocument {
   id: string;
   title: string;
   description: string;
@@ -58,6 +73,7 @@ export interface DocumentItem {
   storageProvider: StorageProviderType;
   status: DocumentStatus;
   versionNumber: number;
+  versionHistory?: DocumentVersion[];
   submitterId: string;
   submitterName: string;
   assignedReviewerId?: string;
@@ -68,6 +84,8 @@ export interface DocumentItem {
   comments: DocumentComment[];
   auditLogs: DocumentAuditLog[];
 }
+
+export type DocumentItem = WorkflowDocument;
 
 export interface PresignedUploadResponse {
   uploadUrl: string;
@@ -96,4 +114,51 @@ export interface DashboardStats {
   changesRequested: number;
   totalStorageBytes: number;
   activeStorageMode: string;
+}
+
+export interface UserAdmin {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  department: string;
+  status: string;
+  createdAt: string;
+  lastActive: string;
+  submittedDocumentCount: number;
+  storageQuotaMb: number;
+}
+
+export interface SystemStats {
+  totalUsers: number;
+  activeWsConnections: number;
+  totalDocuments: number;
+  s3StorageBytes: number;
+  localStorageBytes: number;
+  cpuUsagePercent: number;
+  memoryUsageMb: number;
+  uptimeSeconds: number;
+  apiRequestsPerSec: number;
+  avgLatencyMs: number;
+  pendingReviews: number;
+  approvedCount: number;
+}
+
+export interface SystemLog {
+  id: string;
+  level: string;
+  source: string;
+  message: string;
+  stackTrace?: string;
+  timestamp: string;
+  ipAddress?: string;
+  user?: string;
+}
+
+export interface SyncStorageResponse {
+  orphanedFilesPruned: number;
+  synchronizedEntries: number;
+  reclaimedBytes: number;
+  status: string;
+  completedAt: string;
 }

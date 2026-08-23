@@ -42,4 +42,19 @@ export class AuthService {
     const role = this.currentUser()?.role as any;
     return role === 'Reviewer' || role === 1 || role === 'Admin' || role === 2 || role === UserRole.Reviewer || role === UserRole.Admin;
   }
+
+  isAdmin(): boolean {
+    const role = this.currentUser()?.role as any;
+    return role === 'Admin' || role === 2 || role === UserRole.Admin;
+  }
+
+  isSubmitter(): boolean {
+    const role = this.currentUser()?.role as any;
+    return role === 'Submitter' || role === 0 || role === UserRole.Submitter;
+  }
+
+  getRoleBadgeClass(role: any): string {
+    const r = this.getRoleLabel(role).toLowerCase();
+    return `role-badge-${r}`;
+  }
 }

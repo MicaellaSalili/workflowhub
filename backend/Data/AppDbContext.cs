@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentComment> DocumentComments => Set<DocumentComment>();
     public DbSet<DocumentAuditLog> DocumentAuditLogs => Set<DocumentAuditLog>();
+    public DbSet<DocumentVersion> DocumentVersions => Set<DocumentVersion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,6 +79,20 @@ public class AppDbContext : DbContext
             entity.HasOne(a => a.Document)
                 .WithMany(d => d.AuditLogs)
                 .HasForeignKey(a => a.DocumentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Document Version Configuration
+        modelBuilder.Entity<DocumentVersion>(entity =>
+        {
+            entity.HasKey(v => v.Id);
+            entity.Property(v => v.OriginalFileName).IsRequired().HasMaxLength(255);
+            entity.Property(v => v.StoredFileKey).IsRequired().HasMaxLength(300);
+            entity.Property(v => v.StorageProvider).HasConversion<string>();
+
+            entity.HasOne(v => v.Document)
+                .WithMany(d => d.VersionHistory)
+                .HasForeignKey(v => v.DocumentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

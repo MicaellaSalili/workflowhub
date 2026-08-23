@@ -24,6 +24,15 @@ public record DocumentStatusChangeRequest(
     string ReasonOrNote
 );
 
+public record DocumentReviseRequest(
+    string OriginalFileName,
+    string StoredFileKey,
+    string ContentType,
+    long FileSizeBytes,
+    StorageProviderType StorageProvider,
+    string? RevisionNotes
+);
+
 public record AddCommentRequest(
     string Content,
     bool IsInternalReviewerNote = false
@@ -48,8 +57,22 @@ public record DocumentResponse(
     DateTime CreatedAt,
     DateTime? UpdatedAt,
     DateTime? ReviewedAt,
+    List<DocumentVersionResponse> VersionHistory,
     List<CommentResponse> Comments,
     List<AuditLogResponse> AuditLogs
+);
+
+public record DocumentVersionResponse(
+    Guid Id,
+    int VersionNumber,
+    string OriginalFileName,
+    string StoredFileKey,
+    string ContentType,
+    long FileSizeBytes,
+    StorageProviderType StorageProvider,
+    string Notes,
+    string AuthorName,
+    DateTime CreatedAt
 );
 
 public record CommentResponse(

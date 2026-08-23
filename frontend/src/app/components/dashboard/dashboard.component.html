@@ -1,318 +1,904 @@
 <div class="workflow-dashboard">
-  <!-- Top Bar -->
-  <header class="top-nav">
-    <div class="brand">
-      <div class="logo-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+  <!-- System Broadcast Announcement Banner (SignalR Real-Time) -->
+  <div class="broadcast-banner" *ngIf="activeBroadcastBanner() as b" [ngClass]="b.level">
+    <div class="broadcast-content">
+      <div class="broadcast-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       </div>
-      <div>
-        <h1 class="app-title">WorkflowHub</h1>
-        <span class="app-sub">Enterprise Document Lifecycle & Review</span>
+      <div class="broadcast-text">
+        <strong>{{ b.title }}:</strong> {{ b.message }}
+        <span class="broadcast-sender">— Dispatched by {{ b.sender }}</span>
+      </div>
+    </div>
+    <button class="broadcast-dismiss" (click)="dismissBroadcast()" title="Dismiss Announcement">✕</button>
+  </div>
+
+  <!-- Top Navigation Header -->
+  <header class="top-nav">
+    <div class="brand-group">
+      <div class="logo-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/><path d="m9 16 2 2 4-4"/></svg>
+      </div>
+      <div class="brand-titles">
+        <div class="title-row">
+          <h1 class="app-title">WorkflowHub</h1>
+          <span class="version-badge">v2.4 Enterprise</span>
+        </div>
+        <span class="app-sub">Document Lifecycle, Direct S3 & Real-Time Review Hub</span>
       </div>
     </div>
 
+    <!-- Center View Switcher (Documents vs Admin) -->
+    <div class="nav-center-tabs">
+      <button 
+        class="nav-tab-btn" 
+        [class.active]="mainView() === 'documents'"
+        (click)="onMainViewChange('documents')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Document Hub
+      </button>
+
+      <button 
+        class="nav-tab-btn admin-tab" 
+        [class.active]="mainView() === 'admin'"
+        (click)="onMainViewChange('admin')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Admin Console
+      </button>
+    </div>
+
+    <!-- Right Controls -->
     <div class="top-controls">
       <!-- Storage Environment Pill -->
-      <div class="storage-pill" [class.aws]="storageInfo()?.isAwsS3Configured">
+      <div class="storage-pill" [class.aws]="storageInfo()?.isAwsS3Configured" [title]="storageInfo()?.s3Bucket || 'Local Fallback Disk Storage'">
         <span class="dot"></span>
         <span class="provider-name">
-          {{ storageInfo()?.isAwsS3Configured ? 'AWS S3 Direct Storage' : 'Local Fallback Storage (LocalFiles/)' }}
+          {{ storageInfo()?.isAwsS3Configured ? 'AWS S3 Direct' : 'Local Fallback (LocalFiles/)' }}
         </span>
       </div>
 
-      <!-- SignalR Connection Status -->
-      <div class="signalr-pill" [class.connected]="signalRService.isConnected()">
+      <!-- SignalR Live WebSocket Status -->
+      <div class="signalr-pill" [class.connected]="signalRService.isConnected()" [title]="'Real-Time WebSocket Hub'">
         <span class="status-indicator"></span>
-        <span>{{ signalRService.isConnected() ? 'SignalR Live WS' : 'Connecting WS...' }}</span>
-        <span class="users-count" title="Active Hub Clients">({{ signalRService.activeUsers() }} online)</span>
+        <span class="pill-text">{{ signalRService.isConnected() ? 'SignalR Live' : 'Connecting...' }}</span>
+        <span class="users-count">({{ signalRService.activeUsers() }} online)</span>
       </div>
 
-      <!-- User Role Switcher (Submitter vs Reviewer) -->
-      <div class="user-switcher">
-        <label>Active Persona:</label>
-        <select [ngModel]="authService.currentUser()" (ngModelChange)="authService.switchUser($event)">
-          <option *ngFor="let u of authService.availableUsers()" [ngValue]="u">
-            {{ u.fullName }} ({{ authService.getRoleLabel(u.role) }})
-          </option>
-        </select>
+      <!-- Active Persona Switcher -->
+      <div class="persona-selector-card">
+        <div class="avatar" [ngClass]="authService.getRoleBadgeClass(authService.currentUser().role)">
+          {{ authService.currentUser().fullName.substring(0, 2).toUpperCase() }}
+        </div>
+        <div class="persona-details">
+          <span class="persona-name">{{ authService.currentUser().fullName }}</span>
+          <div class="role-selector-wrap">
+            <span class="role-tag" [ngClass]="authService.getRoleBadgeClass(authService.currentUser().role)">
+              {{ authService.getRoleLabel(authService.currentUser().role) }}
+            </span>
+            <select 
+              [ngModel]="authService.currentUser().id" 
+              (ngModelChange)="onPersonaChange($event)" 
+              class="persona-select">
+              <option *ngFor="let u of authService.availableUsers()" [value]="u.id">
+                Switch to: {{ u.fullName }} ({{ authService.getRoleLabel(u.role) }})
+              </option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <!-- New Upload Action -->
-      <button class="btn btn-primary" (click)="showUploadModal.set(true)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Submit Document
-      </button>
+      <!-- Primary Action Buttons -->
+      <div class="primary-actions">
+        <button class="btn btn-primary" (click)="showUploadModal.set(true)" *ngIf="mainView() === 'documents'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Submit Document
+        </button>
+
+        <button class="btn btn-primary" (click)="showCreateUserModal.set(true)" *ngIf="mainView() === 'admin'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+          Add Member
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- Metrics Bar -->
-  <section class="stats-grid" *ngIf="stats() as s">
-    <div class="stat-card">
-      <div class="stat-meta">
-        <span class="stat-label">Total Submissions</span>
-        <span class="stat-value">{{ s.totalDocuments }}</span>
+  <!-- ROLE CONTEXT BANNER (Highlights current role abilities & use cases) -->
+  <section class="role-context-banner" [ngClass]="authService.getRoleBadgeClass(authService.currentUser().role)">
+    <div class="context-info">
+      <div class="role-badge-large">
+        <span class="role-icon" *ngIf="authService.isSubmitter()">📤</span>
+        <span class="role-icon" *ngIf="authService.isReviewer() && !authService.isAdmin()">🔍</span>
+        <span class="role-icon" *ngIf="authService.isAdmin()">⚡</span>
+        <span class="role-name">{{ authService.getRoleLabel(authService.currentUser().role) }} Workspace</span>
       </div>
-      <div class="stat-icon purple">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      </div>
+      
+      <p class="role-desc" *ngIf="authService.isSubmitter()">
+        Logged in as <strong>{{ authService.currentUser().fullName }}</strong> ({{ authService.currentUser().department }}). You can submit new proposals, track audit states, and <strong>re-upload revisions directly</strong> when changes are requested.
+      </p>
+      <p class="role-desc" *ngIf="authService.isReviewer() && !authService.isAdmin()">
+        Logged in as <strong>{{ authService.currentUser().fullName }}</strong> ({{ authService.currentUser().department }}). You have reviewer authority to triage documents, execute <strong>Approve</strong>, <strong>Request Changes</strong>, or <strong>Reject</strong> decisions, and leave threaded comments.
+      </p>
+      <p class="role-desc" *ngIf="authService.isAdmin()">
+        Logged in as <strong>{{ authService.currentUser().fullName }}</strong> (Enterprise Administrator). Full platform governance: manage users, re-assign roles, monitor live telemetry, reconcile S3 storage, and dispatch organization-wide broadcasts.
+      </p>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-meta">
-        <span class="stat-label">In Review Queue</span>
-        <span class="stat-value">{{ s.pendingReview }}</span>
+    <!-- Role-specific Quick Badges -->
+    <div class="role-quick-actions">
+      <!-- Submitter Action Alert -->
+      <div class="alert-chip warning" *ngIf="authService.isSubmitter() && myChangesRequestedCount() > 0" (click)="activeTab.set('changes')">
+        <span class="chip-count">{{ myChangesRequestedCount() }}</span>
+        <span>Revisions Required</span>
       </div>
-      <div class="stat-icon yellow">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-    </div>
 
-    <div class="stat-card">
-      <div class="stat-meta">
-        <span class="stat-label">Approved Documents</span>
-        <span class="stat-value">{{ s.approved }}</span>
+      <!-- Reviewer Queue Alert -->
+      <div class="alert-chip info" *ngIf="authService.isReviewer() && pendingQueueCount() > 0" (click)="activeTab.set('pending')">
+        <span class="chip-count">{{ pendingQueueCount() }}</span>
+        <span>Pending in Queue</span>
       </div>
-      <div class="stat-icon green">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      </div>
-    </div>
 
-    <div class="stat-card">
-      <div class="stat-meta">
-        <span class="stat-label">Storage Optimization</span>
-        <span class="stat-value">Direct S3 Pre-Signed</span>
-      </div>
-      <div class="stat-icon blue">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-      </div>
+      <!-- Admin Storage Sync Trigger -->
+      <button class="btn btn-outline-light btn-sm" *ngIf="authService.isAdmin()" (click)="triggerStorageSync()" [disabled]="isSyncingStorage()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" [class.spinning]="isSyncingStorage()"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        {{ isSyncingStorage() ? 'Syncing S3...' : 'Reconcile Storage' }}
+      </button>
+
+      <!-- Admin Broadcast Trigger -->
+      <button class="btn btn-outline-light btn-sm" *ngIf="authService.isAdmin()" (click)="showBroadcastModal.set(true)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        Broadcast Alert
+      </button>
     </div>
   </section>
 
-  <!-- Filter & Tab Toolbar -->
-  <section class="toolbar">
-    <div class="tabs">
-      <button class="tab-btn" [class.active]="activeTab() === 'all'" (click)="activeTab.set('all')">
-        All Documents ({{ documents().length }})
-      </button>
-      <button class="tab-btn" [class.active]="activeTab() === 'pending'" (click)="activeTab.set('pending')">
-        Pending Review
-      </button>
-      <button class="tab-btn" [class.active]="activeTab() === 'approved'" (click)="activeTab.set('approved')">
-        Approved
-      </button>
-      <button class="tab-btn" [class.active]="activeTab() === 'changes'" (click)="activeTab.set('changes')">
-        Changes Requested
-      </button>
-    </div>
+  <!-- ========================================================================= -->
+  <!-- MAIN VIEW: DOCUMENT LIFECYCLE & TRIAGE HUB                                -->
+  <!-- ========================================================================= -->
+  <main class="dashboard-body" *ngIf="mainView() === 'documents'">
+    <!-- Top Metrics Overview -->
+    <section class="stats-grid" *ngIf="stats() as s">
+      <div class="stat-card" (click)="activeTab.set('all')">
+        <div class="stat-meta">
+          <span class="stat-label">Total Submissions</span>
+          <span class="stat-value">{{ s.totalDocuments }}</span>
+          <span class="stat-sub">Across all departments</span>
+        </div>
+        <div class="stat-icon purple">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+      </div>
 
-    <div class="filters">
-      <input 
-        type="text" 
-        placeholder="Search title, author, file..." 
-        [ngModel]="searchQuery()" 
-        (ngModelChange)="searchQuery.set($event)"
-        class="search-input"
-      />
-      <select [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)" class="select-input">
-        <option value="All">All Categories</option>
-        <option value="Engineering">Engineering</option>
-        <option value="Architecture">Architecture</option>
-        <option value="Security">Security</option>
-        <option value="Legal">Legal</option>
-        <option value="Operations">Operations</option>
-      </select>
-    </div>
-  </section>
+      <div class="stat-card" (click)="activeTab.set('pending')">
+        <div class="stat-meta">
+          <span class="stat-label">Pending Review</span>
+          <span class="stat-value">{{ s.pendingReview }}</span>
+          <span class="stat-sub">Awaiting decision</span>
+        </div>
+        <div class="stat-icon yellow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+      </div>
 
-  <!-- Main Grid: Documents Table + Detail Inspector Panel -->
-  <div class="content-split">
-    <!-- Document Table -->
-    <div class="table-container">
-      <table class="doc-table">
-        <thead>
-          <tr>
-            <th>Document</th>
-            <th>Category</th>
-            <th>Submitter</th>
-            <th>Storage Layer</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let doc of filteredDocuments()" 
-              [class.selected]="selectedDocument()?.id === doc.id"
-              (click)="selectedDocument.set(doc)">
-            <td>
-              <div class="doc-title-cell">
-                <strong>{{ doc.title }}</strong>
-                <span class="file-meta">{{ doc.originalFileName }} ({{ (doc.fileSizeBytes / 1024).toFixed(0) }} KB)</span>
-              </div>
-            </td>
-            <td><span class="category-chip">{{ doc.category }}</span></td>
-            <td>{{ doc.submitterName }}</td>
-            <td>
-              <span class="storage-tag" [class.s3]="doc.storageProvider === 'AwsS3' || doc.storageProvider === 0">
-                {{ doc.storageProvider === 'AwsS3' || doc.storageProvider === 0 ? 'AWS S3' : 'LocalFiles' }}
-              </span>
-            </td>
-            <td>
-              <span class="status-badge" [ngClass]="getStatusClass(doc.status)">
+      <div class="stat-card" (click)="activeTab.set('changes')">
+        <div class="stat-meta">
+          <span class="stat-label">Changes Requested</span>
+          <span class="stat-value">{{ s.changesRequested }}</span>
+          <span class="stat-sub">Revisions pending</span>
+        </div>
+        <div class="stat-icon orange">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        </div>
+      </div>
+
+      <div class="stat-card" (click)="activeTab.set('approved')">
+        <div class="stat-meta">
+          <span class="stat-label">Approved Archive</span>
+          <span class="stat-value">{{ s.approved }}</span>
+          <span class="stat-sub">Passed compliance</span>
+        </div>
+        <div class="stat-icon green">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-meta">
+          <span class="stat-label">Storage Optimization</span>
+          <span class="stat-value">{{ (s.totalStorageBytes / (1024 * 1024)).toFixed(2) }} MB</span>
+          <span class="stat-sub">{{ storageInfo()?.isAwsS3Configured ? 'AWS S3 Bucket' : 'Local Fallback' }}</span>
+        </div>
+        <div class="stat-icon blue">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar: Tab Filters & Search Controls -->
+    <section class="toolbar-section">
+      <div class="filter-tabs-scroll">
+        <div class="tabs-group">
+          <button class="tab-btn" [class.active]="activeTab() === 'all'" (click)="activeTab.set('all')">
+            All Documents ({{ documents().length }})
+          </button>
+          
+          <button class="tab-btn" [class.active]="activeTab() === 'my_submissions'" (click)="activeTab.set('my_submissions')">
+            My Submissions
+          </button>
+
+          <button class="tab-btn" [class.active]="activeTab() === 'pending'" (click)="activeTab.set('pending')">
+            Pending Review
+            <span class="tab-badge" *ngIf="pendingQueueCount() > 0">{{ pendingQueueCount() }}</span>
+          </button>
+
+          <button class="tab-btn" [class.active]="activeTab() === 'changes'" (click)="activeTab.set('changes')">
+            Changes Requested
+            <span class="tab-badge warning" *ngIf="stats()?.changesRequested">{{ stats()?.changesRequested }}</span>
+          </button>
+
+          <button class="tab-btn" [class.active]="activeTab() === 'approved'" (click)="activeTab.set('approved')">
+            Approved
+          </button>
+        </div>
+      </div>
+
+      <div class="search-and-select">
+        <div class="search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+          <input 
+            type="text" 
+            placeholder="Search by title, author, file..." 
+            [ngModel]="searchQuery()" 
+            (ngModelChange)="searchQuery.set($event)"
+            class="search-input"
+          />
+        </div>
+
+        <select [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)" class="category-select">
+          <option value="All">All Categories</option>
+          <option value="Engineering">Engineering</option>
+          <option value="Architecture">Architecture</option>
+          <option value="Security">Security</option>
+          <option value="Legal">Legal</option>
+          <option value="Operations">Operations</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Main Content Split: Documents Table + Detail Inspector Drawer -->
+    <div class="content-split" [class.has-selection]="selectedDocument() !== null">
+      <!-- Documents Master List / Table -->
+      <div class="table-card">
+        <div class="table-responsive">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Document Details</th>
+                <th>Category</th>
+                <th>Submitter</th>
+                <th>Version</th>
+                <th>Storage</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr 
+                *ngFor="let doc of filteredDocuments()" 
+                [class.selected]="selectedDocument()?.id === doc.id"
+                (click)="selectedDocument.set(doc)">
+                <td>
+                  <div class="doc-primary-cell">
+                    <div class="doc-file-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div class="doc-info">
+                      <strong class="doc-title-text">{{ doc.title }}</strong>
+                      <span class="file-subtext">
+                        {{ doc.originalFileName }} &bull; {{ (doc.fileSizeBytes / 1024).toFixed(0) }} KB
+                      </span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="category-chip">{{ doc.category }}</span>
+                </td>
+                <td>
+                  <div class="submitter-cell">
+                    <span class="submitter-name">{{ doc.submitterName }}</span>
+                    <span class="submit-time">{{ doc.createdAt | date:'mediumDate' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="version-pill">v{{ doc.versionNumber }}</span>
+                </td>
+                <td>
+                  <span class="storage-tag" [class.s3]="doc.storageProvider === 'AwsS3' || doc.storageProvider === 0">
+                    {{ doc.storageProvider === 'AwsS3' || doc.storageProvider === 0 ? 'AWS S3' : 'LocalFiles' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge" [ngClass]="getStatusClass(doc.status)">
+                    {{ getStatusText(doc.status) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons-cell">
+                    <button class="btn btn-sm btn-inspect" (click)="$event.stopPropagation(); selectedDocument.set(doc)">
+                      Inspect
+                    </button>
+                    <!-- Quick Revision Button for Submitter if changes requested -->
+                    <button 
+                      *ngIf="getStatusText(doc.status) === 'ChangesRequested'" 
+                      class="btn btn-sm btn-reupload-quick" 
+                      (click)="$event.stopPropagation(); openUploadNewVersionModal(doc)"
+                      title="Upload new version to replace content">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                      Upload New Version
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr *ngIf="filteredDocuments().length === 0">
+                <td colspan="7" class="empty-state">
+                  <div class="empty-state-wrap">
+                    <div class="empty-icon">📁</div>
+                    <h4>No Documents Found</h4>
+                    <p>No document submissions matched your filter criteria.</p>
+                    <button class="btn btn-secondary btn-sm" (click)="activeTab.set('all'); searchQuery.set(''); selectedCategory.set('All')">
+                      Reset Filters
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right Side Inspector Panel / Drawer -->
+      <aside class="detail-sidebar" *ngIf="selectedDocument() as doc">
+        <div class="sidebar-header">
+          <div class="header-main-meta">
+            <div class="version-row">
+              <span class="version-pill large">Version {{ doc.versionNumber }}</span>
+              <span class="status-badge large" [ngClass]="getStatusClass(doc.status)">
                 {{ getStatusText(doc.status) }}
               </span>
-            </td>
-            <td>
-              <button class="btn btn-sm" (click)="$event.stopPropagation(); selectedDocument.set(doc)">
-                Inspect
-              </button>
-            </td>
-          </tr>
-          <tr *ngIf="filteredDocuments().length === 0">
-            <td colspan="6" class="empty-state">No documents match the current filter.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Right-Hand Document Lifecycle & Audit Inspector -->
-    <aside class="detail-sidebar" *ngIf="selectedDocument() as doc">
-      <div class="sidebar-header">
-        <div class="header-info">
-          <h3>{{ doc.title }}</h3>
-          <div class="meta-row">
-            <span class="version-tag">Version {{ doc.versionNumber }}</span>
-            <span class="status-badge" [ngClass]="getStatusClass(doc.status)">
-              {{ getStatusText(doc.status) }}
+              <span class="category-chip">{{ doc.category }}</span>
+            </div>
+            <h3 class="sidebar-title">{{ doc.title }}</h3>
+            <span class="submitted-by-meta">
+              Submitted by <strong>{{ doc.submitterName }}</strong> &bull; {{ doc.createdAt | date:'medium' }}
             </span>
           </div>
-        </div>
-        <button class="close-btn" (click)="selectedDocument.set(null)" title="Close Inspector">✕</button>
-      </div>
-
-      <div class="detail-section">
-        <label>Description</label>
-        <p class="desc-text">{{ doc.description || 'No description provided.' }}</p>
-      </div>
-
-      <!-- Action Panel for Reviewers -->
-      <div class="review-actions-card">
-        <div class="review-header">
-          <h4>Review Workflow Decisions</h4>
-          <span class="persona-indicator" [class.reviewer]="authService.isReviewer()">
-            {{ authService.getRoleLabel(authService.currentUser().role) }} Mode
-          </span>
+          <button class="close-btn" (click)="selectedDocument.set(null)" title="Close Inspector">✕</button>
         </div>
 
-        <div *ngIf="authService.isReviewer()">
-          <p class="sub-text">Select a workflow decision to transition this document state:</p>
-          <div class="btn-group">
-            <button class="btn btn-approve" (click)="reviewStatusChange(doc, 'Approved', 'Architecture and security review passed.')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Approve
-            </button>
-            <button class="btn btn-warning" (click)="reviewStatusChange(doc, 'ChangesRequested', 'Please revise the specifications and re-upload.')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-              Request Changes
-            </button>
-            <button class="btn btn-danger" (click)="reviewStatusChange(doc, 'Rejected', 'Does not meet architectural compliance.')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              Reject
-            </button>
+        <div class="sidebar-body">
+          <!-- Description -->
+          <div class="inspector-card">
+            <h4 class="card-subtitle">Document Description</h4>
+            <p class="desc-text">{{ doc.description || 'No description provided for this submission.' }}</p>
           </div>
-        </div>
 
-        <div *ngIf="!authService.isReviewer()" class="persona-hint">
-          <p>You are currently in <strong>Submitter</strong> mode. To test approval & rejection workflows, switch to a <strong>Reviewer persona</strong> (e.g. Alex Rivera or Marcus Sterling) from the top navigation bar.</p>
-        </div>
-      </div>
-
-      <!-- File & Storage Specs -->
-      <div class="detail-section">
-        <label>File Information</label>
-        <div class="file-box">
-          <div>
-            <strong>{{ doc.originalFileName }}</strong>
-            <span class="key-text">Key: {{ doc.storedFileKey }}</span>
-          </div>
-          <button class="btn btn-secondary btn-sm" (click)="downloadDocument(doc)">Download</button>
-        </div>
-      </div>
-
-      <!-- Real-Time Comments & Discussion -->
-      <div class="detail-section comments-section">
-        <label>Review Thread & Comments ({{ doc.comments.length || 0 }})</label>
-        <div class="comments-list">
-          <div class="comment-bubble" *ngFor="let c of doc.comments">
-            <div class="comment-meta">
-              <strong>{{ c.authorName }}</strong>
-              <span class="role-chip">{{ c.authorRole }}</span>
-              <span class="time">{{ c.createdAt | date:'shortTime' }}</span>
+          <!-- ============================================================= -->
+          <!-- USE CASE 1: SUBMITTER REVISION CARD (When ChangesRequested)    -->
+          <!-- ============================================================= -->
+          <div class="revision-callout-card" *ngIf="getStatusText(doc.status) === 'ChangesRequested'">
+            <div class="callout-header">
+              <div class="callout-icon">⚠️</div>
+              <div>
+                <h4>Action Required: Changes Requested</h4>
+                <p>The reviewer has requested changes on this document. You can replace the document content with a new version (<strong>v{{ doc.versionNumber + 1 }}</strong>) and resubmit for review.</p>
+              </div>
             </div>
-            <p>{{ c.content }}</p>
-          </div>
-          <p class="empty-text" *ngIf="!doc.comments || doc.comments.length === 0">
-            No comments yet.
-          </p>
-        </div>
-      </div>
 
-      <!-- Audit Trail -->
-      <div class="detail-section">
-        <label>Audit History</label>
-        <div class="audit-timeline">
-          <div class="audit-item" *ngFor="let log of doc.auditLogs">
-            <span class="audit-dot"></span>
-            <div>
-              <strong>{{ log.action }}</strong>
-              <span class="audit-user">by {{ log.performedBy }}</span>
-              <p class="audit-details">{{ log.details }}</p>
+            <button class="btn btn-warning btn-block" (click)="openUploadNewVersionModal(doc)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              Upload New Version (v{{ doc.versionNumber + 1 }})
+            </button>
+          </div>
+
+          <!-- ============================================================= -->
+          <!-- DEDICATED VERSION HISTORY PANEL                               -->
+          <!-- ============================================================= -->
+          <div class="inspector-card version-history-card">
+            <div class="card-header-flex">
+              <h4 class="card-subtitle">
+                Version History ({{ (doc.versionHistory && doc.versionHistory.length > 0) ? doc.versionHistory.length : 1 }})
+              </h4>
+              <button 
+                *ngIf="getStatusText(doc.status) === 'ChangesRequested'" 
+                class="btn btn-xs btn-outline-warning" 
+                (click)="openUploadNewVersionModal(doc)">
+                + Upload v{{ doc.versionNumber + 1 }}
+              </button>
+            </div>
+
+            <div class="version-history-list" *ngIf="doc.versionHistory && doc.versionHistory.length > 0">
+              <div 
+                class="version-item" 
+                *ngFor="let ver of doc.versionHistory; let idx = index"
+                [class.current-version]="ver.versionNumber === doc.versionNumber">
+                <div class="version-badge-col">
+                  <span class="v-badge" [class.latest]="ver.versionNumber === doc.versionNumber">
+                    v{{ ver.versionNumber }}
+                  </span>
+                  <span class="v-latest-tag" *ngIf="ver.versionNumber === doc.versionNumber">Current</span>
+                </div>
+
+                <div class="version-info-col">
+                  <div class="v-title-line">
+                    <span class="v-file-name" [title]="ver.originalFileName">{{ ver.originalFileName }}</span>
+                    <span class="v-file-size">{{ (ver.fileSizeBytes / 1024).toFixed(0) }} KB</span>
+                  </div>
+                  <p class="v-notes" *ngIf="ver.notes">{{ ver.notes }}</p>
+                  <div class="v-meta-line">
+                    <span>Uploaded by <strong>{{ ver.authorName || 'Submitter' }}</strong></span>
+                    <span>&bull;</span>
+                    <span>{{ ver.createdAt | date:'medium' }}</span>
+                  </div>
+                </div>
+
+                <div class="version-action-col">
+                  <button 
+                    class="btn btn-icon-sm" 
+                    title="Download this specific version" 
+                    (click)="downloadVersion(ver)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fallback if version history is empty -->
+            <div class="version-history-list" *ngIf="!doc.versionHistory || doc.versionHistory.length === 0">
+              <div class="version-item current-version">
+                <div class="version-badge-col">
+                  <span class="v-badge latest">v{{ doc.versionNumber }}</span>
+                  <span class="v-latest-tag">Current</span>
+                </div>
+                <div class="version-info-col">
+                  <div class="v-title-line">
+                    <span class="v-file-name">{{ doc.originalFileName }}</span>
+                    <span class="v-file-size">{{ (doc.fileSizeBytes / 1024).toFixed(0) }} KB</span>
+                  </div>
+                  <p class="v-notes">Initial Document Submission</p>
+                  <div class="v-meta-line">
+                    <span>Uploaded by <strong>{{ doc.submitterName }}</strong></span>
+                    <span>&bull;</span>
+                    <span>{{ doc.createdAt | date:'medium' }}</span>
+                  </div>
+                </div>
+                <div class="version-action-col">
+                  <button class="btn btn-icon-sm" (click)="downloadDocument(doc)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================================= -->
+          <!-- USE CASE 2: REVIEWER WORKFLOW DECISION ACTIONS                 -->
+          <!-- ============================================================= -->
+          <div class="decision-card">
+            <div class="decision-header">
+              <h4>Review Workflow Decision</h4>
+              <span class="persona-indicator" [class.reviewer]="authService.isReviewer()">
+                {{ authService.getRoleLabel(authService.currentUser().role) }} Mode
+              </span>
+            </div>
+
+            <!-- Reviewer Decision Buttons -->
+            <div *ngIf="authService.isReviewer()">
+              <p class="decision-guide">Select a review outcome to transition the document lifecycle:</p>
+              
+              <div class="decision-btn-grid">
+                <button class="btn btn-approve" (click)="openDecisionModal(doc, 'Approved')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Approve
+                </button>
+
+                <button class="btn btn-changes" (click)="openDecisionModal(doc, 'ChangesRequested')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  Request Changes
+                </button>
+
+                <button class="btn btn-reject" (click)="openDecisionModal(doc, 'Rejected')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Reject
+                </button>
+              </div>
+            </div>
+
+            <!-- Submitter Persona Hint -->
+            <div *ngIf="!authService.isReviewer()" class="persona-hint-box">
+              <p>You are in <strong>Submitter Mode</strong>. To test approving or requesting changes, switch to a <strong>Reviewer persona</strong> (e.g. Alex Rivera or System Admin) from the top navigation bar.</p>
+            </div>
+          </div>
+
+          <!-- File Metadata & Direct Download -->
+          <div class="inspector-card">
+            <h4 class="card-subtitle">File Specifications & Storage</h4>
+            <div class="file-spec-box">
+              <div class="file-details">
+                <strong class="file-name">{{ doc.originalFileName }}</strong>
+                <span class="file-meta-line">
+                  Size: {{ (doc.fileSizeBytes / 1024).toFixed(0) }} KB &bull; Type: {{ doc.contentType || 'application/octet-stream' }}
+                </span>
+                <span class="storage-key-line" [title]="doc.storedFileKey">
+                  Key: {{ doc.storedFileKey }}
+                </span>
+              </div>
+              <button class="btn btn-secondary btn-sm download-btn" (click)="downloadDocument(doc)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Download
+              </button>
+            </div>
+          </div>
+
+          <!-- Real-time Comments & Discussion Thread -->
+          <div class="inspector-card comments-card">
+            <h4 class="card-subtitle">Review Thread & Comments ({{ doc.comments ? doc.comments.length : 0 }})</h4>
+            
+            <div class="comments-list">
+              <div 
+                class="comment-bubble" 
+                *ngFor="let c of doc.comments" 
+                [class.internal-note]="c.isInternalReviewerNote">
+                <div class="comment-header">
+                  <span class="comment-author">{{ c.authorName }}</span>
+                  <span class="role-chip" [ngClass]="authService.getRoleBadgeClass(c.authorRole)">{{ c.authorRole }}</span>
+                  <span class="internal-tag" *ngIf="c.isInternalReviewerNote">Internal Reviewer Note</span>
+                  <span class="comment-time">{{ c.createdAt | date:'shortTime' }}</span>
+                </div>
+                <p class="comment-body">{{ c.content }}</p>
+              </div>
+
+              <div class="no-comments" *ngIf="!doc.comments || doc.comments.length === 0">
+                <span>No comments or review notes yet.</span>
+              </div>
+            </div>
+
+            <!-- Comment Input Form -->
+            <div class="comment-input-area">
+              <textarea 
+                rows="2" 
+                placeholder="Write a feedback reply or question..." 
+                [ngModel]="newCommentContent()" 
+                (ngModelChange)="newCommentContent.set($event)"
+                class="comment-textarea"></textarea>
+              
+              <div class="comment-actions-bar">
+                <label class="internal-checkbox" *ngIf="authService.isReviewer()">
+                  <input type="checkbox" [ngModel]="isInternalComment()" (ngModelChange)="isInternalComment.set($event)" />
+                  <span>Reviewer-Only Internal Note</span>
+                </label>
+                
+                <button 
+                  class="btn btn-primary btn-sm" 
+                  [disabled]="!newCommentContent().trim()"
+                  (click)="postComment(doc)">
+                  Post Reply
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Immutable Audit Trail -->
+          <div class="inspector-card audit-card">
+            <h4 class="card-subtitle">Lifecycle Audit Trail</h4>
+            <div class="audit-timeline">
+              <div class="audit-item" *ngFor="let log of doc.auditLogs">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-header">
+                    <strong>{{ log.action }}</strong>
+                    <span class="timeline-time">{{ log.timestamp | date:'short' }}</span>
+                  </div>
+                  <span class="performed-by">by {{ log.performedBy }}</span>
+                  <p class="audit-details-text">{{ log.details }}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </aside>
-  </div>
+      </aside>
+    </div>
+  </main>
 
-  <!-- Upload Modal -->
+  <!-- ========================================================================= -->
+  <!-- ADMIN CONTROL CENTER VIEW (Role: Admin Use Cases)                         -->
+  <!-- ========================================================================= -->
+  <main class="dashboard-body admin-view" *ngIf="mainView() === 'admin'">
+    <div class="admin-header-strip">
+      <div class="admin-tabs">
+        <button class="admin-tab-btn" [class.active]="adminTab() === 'telemetry'" (click)="adminTab.set('telemetry')">
+          ⚡ System Telemetry
+        </button>
+        <button class="admin-tab-btn" [class.active]="adminTab() === 'users'" (click)="adminTab.set('users')">
+          👥 Users & Roles
+        </button>
+        <button class="admin-tab-btn" [class.active]="adminTab() === 'storage'" (click)="adminTab.set('storage')">
+          💾 Storage & Reconciliation
+        </button>
+        <button class="admin-tab-btn" [class.active]="adminTab() === 'logs'" (click)="adminTab.set('logs')">
+          📜 System Event Logs
+        </button>
+        <button class="admin-tab-btn" [class.active]="adminTab() === 'broadcast'" (click)="adminTab.set('broadcast')">
+          📢 Emergency Broadcast
+        </button>
+      </div>
+
+      <button class="btn btn-secondary btn-sm" (click)="loadAdminData()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        Refresh Telemetry
+      </button>
+    </div>
+
+    <!-- 1. TELEMETRY TAB -->
+    <div *ngIf="adminTab() === 'telemetry'" class="admin-content-section">
+      <div class="telemetry-grid" *ngIf="systemStats() as sys">
+        <div class="telemetry-card">
+          <span class="telemetry-label">Active WebSocket Clients</span>
+          <span class="telemetry-number">{{ signalRService.activeUsers() }}</span>
+          <span class="telemetry-sub">Live DocumentHub subscribers</span>
+        </div>
+
+        <div class="telemetry-card">
+          <span class="telemetry-label">API Throughput</span>
+          <span class="telemetry-number">{{ sys.apiRequestsPerSec }} req/s</span>
+          <span class="telemetry-sub">Avg Latency: {{ sys.avgLatencyMs }}ms</span>
+        </div>
+
+        <div class="telemetry-card">
+          <span class="telemetry-label">Container CPU Load</span>
+          <span class="telemetry-number">{{ sys.cpuUsagePercent }}%</span>
+          <div class="gauge-bar"><div class="gauge-fill" [style.width.%]="sys.cpuUsagePercent"></div></div>
+        </div>
+
+        <div class="telemetry-card">
+          <span class="telemetry-label">Memory Footprint</span>
+          <span class="telemetry-number">{{ sys.memoryUsageMb.toFixed(0) }} MB</span>
+          <span class="telemetry-sub">Uptime: {{ (sys.uptimeSeconds / 3600).toFixed(1) }} hours</span>
+        </div>
+
+        <div class="telemetry-card">
+          <span class="telemetry-label">AWS S3 Allocated Storage</span>
+          <span class="telemetry-number">{{ (sys.s3StorageBytes / (1024 * 1024)).toFixed(2) }} MB</span>
+          <span class="telemetry-sub">Direct pre-signed binary uploads</span>
+        </div>
+
+        <div class="telemetry-card">
+          <span class="telemetry-label">Local Disk Fallback</span>
+          <span class="telemetry-number">{{ (sys.localStorageBytes / (1024 * 1024)).toFixed(2) }} MB</span>
+          <span class="telemetry-sub">Local disk storage volume</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. USERS & ROLE MANAGEMENT TAB -->
+    <div *ngIf="adminTab() === 'users'" class="admin-content-section">
+      <div class="section-actions-bar">
+        <h3>Organization Members & Role Directory</h3>
+        <button class="btn btn-primary btn-sm" (click)="showCreateUserModal.set(true)">
+          + Add New Member
+        </button>
+      </div>
+
+      <div class="table-card">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Department</th>
+              <th>Current Role</th>
+              <th>Storage Quota</th>
+              <th>Submissions</th>
+              <th>Role Assignment</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of adminUsers()">
+              <td>
+                <div class="user-meta-cell">
+                  <strong>{{ user.fullName }}</strong>
+                  <span class="email-text">{{ user.email }}</span>
+                </div>
+              </td>
+              <td><span class="category-chip">{{ user.department }}</span></td>
+              <td>
+                <span class="role-badge-pill" [ngClass]="authService.getRoleBadgeClass(user.role)">
+                  {{ user.role }}
+                </span>
+              </td>
+              <td>{{ user.storageQuotaMb }} MB</td>
+              <td>{{ user.submittedDocumentCount }} docs</td>
+              <td>
+                <select 
+                  [ngModel]="user.role" 
+                  (ngModelChange)="assignUserRole(user, $event)" 
+                  class="role-select-box">
+                  <option value="Submitter">Submitter</option>
+                  <option value="Reviewer">Reviewer</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </td>
+              <td>
+                <button class="btn btn-danger btn-sm" (click)="deleteUser(user.id)" title="Remove user">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. STORAGE & RECONCILIATION TAB -->
+    <div *ngIf="adminTab() === 'storage'" class="admin-content-section">
+      <div class="storage-sync-dashboard" *ngIf="storageInfo() as st">
+        <div class="storage-overview-card">
+          <div class="storage-provider-badge">
+            <span class="dot-live"></span>
+            <strong>Active Provider: {{ st.isAwsS3Configured ? 'AWS S3 Direct Bucket' : 'Local File System Fallback' }}</strong>
+          </div>
+          <p>WorkflowHub uses pre-signed HTTP PUT signatures to stream large documents directly to cloud object storage. This reduces API server memory overhead and bypasses payload size limitations.</p>
+          
+          <div class="storage-spec-grid">
+            <div class="spec-item">
+              <label>S3 Bucket Name</label>
+              <strong>{{ st.s3Bucket || 'N/A (Local Disk Fallback)' }}</strong>
+            </div>
+            <div class="spec-item">
+              <label>S3 AWS Region</label>
+              <strong>{{ st.s3Region || 'N/A' }}</strong>
+            </div>
+            <div class="spec-item">
+              <label>Max Single File Size</label>
+              <strong>{{ st.maxFileSizeMb }} MB</strong>
+            </div>
+            <div class="spec-item">
+              <label>Allowed Extensions</label>
+              <strong>{{ st.allowedExtensions.join(', ') }}</strong>
+            </div>
+          </div>
+
+          <div class="reconcile-actions">
+            <button class="btn btn-primary" (click)="triggerStorageSync()" [disabled]="isSyncingStorage()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" [class.spinning]="isSyncingStorage()"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              {{ isSyncingStorage() ? 'Reconciling Storage Objects...' : 'Run Storage Reconciliation & Sync' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. SYSTEM EVENT LOGS TAB -->
+    <div *ngIf="adminTab() === 'logs'" class="admin-content-section">
+      <div class="section-actions-bar">
+        <h3>Real-Time Security & Telemetry Logs</h3>
+        <div class="log-filters">
+          <button class="btn btn-sm" [class.btn-primary]="logFilterLevel() === 'ALL'" (click)="filterLogs('ALL')">All</button>
+          <button class="btn btn-sm" [class.btn-primary]="logFilterLevel() === 'INFO'" (click)="filterLogs('INFO')">INFO</button>
+          <button class="btn btn-sm" [class.btn-primary]="logFilterLevel() === 'SIGNALR'" (click)="filterLogs('SIGNALR')">SIGNALR</button>
+          <button class="btn btn-sm" [class.btn-primary]="logFilterLevel() === 'STORAGE'" (click)="filterLogs('STORAGE')">STORAGE</button>
+          <button class="btn btn-sm" [class.btn-primary]="logFilterLevel() === 'SECURITY'" (click)="filterLogs('SECURITY')">SECURITY</button>
+          <button class="btn btn-sm" [class.btn-primary]="logFilterLevel() === 'WARN'" (click)="filterLogs('WARN')">WARN</button>
+        </div>
+      </div>
+
+      <div class="logs-console-card">
+        <div class="log-entry" *ngFor="let log of systemLogs()" [ngClass]="log.level.toLowerCase()">
+          <span class="log-time">{{ log.timestamp | date:'HH:mm:ss' }}</span>
+          <span class="log-badge" [ngClass]="log.level.toLowerCase()">[{{ log.level }}]</span>
+          <span class="log-source">[{{ log.source }}]</span>
+          <span class="log-msg">{{ log.message }}</span>
+          <span class="log-user" *ngIf="log.user">({{ log.user }})</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. BROADCAST CENTER TAB -->
+    <div *ngIf="adminTab() === 'broadcast'" class="admin-content-section">
+      <div class="broadcast-center-card">
+        <h3>Dispatch System-Wide Emergency Broadcast</h3>
+        <p>Send an instant high-priority banner notification to all connected users and browser tabs over SignalR.</p>
+
+        <form [formGroup]="broadcastForm" (ngSubmit)="sendBroadcast()" class="broadcast-form">
+          <div class="form-group">
+            <label>Announcement Title *</label>
+            <input type="text" formControlName="title" placeholder="e.g. Scheduled Infrastructure Maintenance" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label>Severity Level *</label>
+            <select formControlName="level" class="form-input">
+              <option value="info">Information (Blue)</option>
+              <option value="warning">Warning / Action Required (Yellow/Orange)</option>
+              <option value="danger">Urgent / Critical (Red)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Message Content *</label>
+            <textarea formControlName="message" rows="3" placeholder="Explain the maintenance window, downtime, or policy update..." class="form-input"></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="broadcastForm.invalid">
+              Dispatch Broadcast to All Users
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODALS & OVERLAYS                                                         -->
+  <!-- ========================================================================= -->
+
+  <!-- 1. SUBMIT DOCUMENT MODAL -->
   <div class="modal-backdrop" *ngIf="showUploadModal()" (click)="showUploadModal.set(false)">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Submit Document to WorkflowHub</h3>
+        <div class="modal-title-wrap">
+          <div class="modal-icon">📤</div>
+          <h3>Submit Document to Workflow Queue</h3>
+        </div>
         <button class="close-btn" (click)="showUploadModal.set(false)">✕</button>
       </div>
 
       <form [formGroup]="uploadForm" (ngSubmit)="submitDocument()">
         <div class="form-group">
           <label>Document Title *</label>
-          <input type="text" formControlName="title" placeholder="e.g. Q3 Microservices Migration Architecture" class="form-input" />
+          <input type="text" formControlName="title" placeholder="e.g. Q4 Cloud Security & Governance Policy" class="form-input" />
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Category *</label>
+            <select formControlName="category" class="form-input">
+              <option value="Engineering">Engineering</option>
+              <option value="Architecture">Architecture</option>
+              <option value="Security">Security</option>
+              <option value="Legal">Legal</option>
+              <option value="Operations">Operations</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Submitter Persona</label>
+            <input type="text" [value]="authService.currentUser().fullName" disabled class="form-input disabled" />
+          </div>
         </div>
 
         <div class="form-group">
-          <label>Category *</label>
-          <select formControlName="category" class="form-input">
-            <option value="Engineering">Engineering</option>
-            <option value="Architecture">Architecture</option>
-            <option value="Security">Security</option>
-            <option value="Legal">Legal</option>
-          </select>
+          <label>Summary / Proposal Description</label>
+          <textarea formControlName="description" rows="3" placeholder="Provide context or summary for the reviewers..." class="form-input"></textarea>
         </div>
 
         <div class="form-group">
-          <label>Description</label>
-          <textarea formControlName="description" rows="3" placeholder="Summary of the changes or proposal..." class="form-input"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Select File (Max 25MB - PDF, DOCX, XLSX, ZIP) *</label>
-          <input type="file" (change)="onFileSelected($event)" class="file-input" />
-          <span class="file-hint" *ngIf="selectedFile">
-            Selected: {{ selectedFile.name }} ({{ (selectedFile.size / 1024).toFixed(0) }} KB)
-          </span>
+          <label>Attach Document File (Max 25MB - PDF, DOCX, XLSX, ZIP) *</label>
+          <div class="file-drop-area">
+            <input type="file" (change)="onFileSelected($event)" class="file-input-native" />
+            <div class="file-drop-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              <span *ngIf="!selectedFile">Click or drag a file to upload directly to storage</span>
+              <span *ngIf="selectedFile" class="selected-filename">
+                Selected: <strong>{{ selectedFile.name }}</strong> ({{ (selectedFile.size / 1024).toFixed(0) }} KB)
+              </span>
+            </div>
+          </div>
         </div>
 
         <div class="upload-progress-bar" *ngIf="isUploading()">
           <div class="progress-fill" [style.width.%]="uploadProgress()"></div>
-          <span>Uploading via Direct Pre-Signed Stream ({{ uploadProgress() }}%)...</span>
+          <span>Streaming directly to {{ storageInfo()?.isAwsS3Configured ? 'AWS S3' : 'Storage' }} ({{ uploadProgress() }}%)...</span>
         </div>
 
         <div class="modal-actions">
@@ -325,11 +911,194 @@
     </div>
   </div>
 
-  <!-- Real-time Toast Notifications -->
+  <!-- 2. REVISE / UPLOAD NEW VERSION MODAL (Submitter Use Case) -->
+  <div class="modal-backdrop" *ngIf="showRevisionModal()" (click)="showRevisionModal.set(false)">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon warning">🔄</div>
+          <div>
+            <h3>Upload New Version</h3>
+            <span class="modal-subtitle">Replace Document Content & Increment to Version {{ selectedDocument()!.versionNumber + 1 }}</span>
+          </div>
+        </div>
+        <button class="close-btn" (click)="showRevisionModal.set(false)">✕</button>
+      </div>
+
+      <form [formGroup]="revisionForm" (ngSubmit)="submitRevision()">
+        <div class="document-summary-badge">
+          <div class="summary-top-row">
+            <strong>{{ selectedDocument()?.title }}</strong>
+            <span class="status-pill status-changes-req">Changes Requested</span>
+          </div>
+          <div class="summary-meta-row">
+            <span>Category: <strong>{{ selectedDocument()?.category }}</strong></span>
+            <span>Current File: <strong>{{ selectedDocument()?.originalFileName }}</strong> (v{{ selectedDocument()?.versionNumber }})</span>
+            <span>Target Version: <strong class="text-amber">v{{ selectedDocument()!.versionNumber + 1 }}</strong></span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Version Revision Notes / Summary of Changes *</label>
+          <textarea 
+            formControlName="revisionNotes" 
+            rows="3" 
+            placeholder="e.g. Addressed reviewer feedback in section 2. Updated financial figures and attached certified appendix." 
+            class="form-input"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Select Replacement File (Max 25MB) *</label>
+          <div class="file-drop-area" [class.has-file]="!!selectedRevisionFile">
+            <input type="file" (change)="onRevisionFileSelected($event)" class="file-input-native" />
+            <div class="file-drop-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              <span *ngIf="!selectedRevisionFile" class="drop-hint">Choose or drag updated file to replace document content</span>
+              <div *ngIf="selectedRevisionFile" class="selected-filename-box">
+                <span class="file-tag">Replacement Ready:</span>
+                <strong>{{ selectedRevisionFile.name }}</strong> 
+                <span class="file-size-tag">({{ (selectedRevisionFile.size / 1024).toFixed(0) }} KB)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="upload-progress-bar" *ngIf="isRevising()">
+          <div class="progress-fill" [style.width.%]="revisionProgress()"></div>
+          <span>Uploading new version and replacing content ({{ revisionProgress() }}%)...</span>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="showRevisionModal.set(false)">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="revisionForm.invalid || !selectedRevisionFile || isRevising()">
+            <svg *ngIf="!isRevising()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            {{ isRevising() ? 'Uploading Version...' : 'Upload & Replace Content (v' + (selectedDocument()!.versionNumber + 1) + ')' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. REVIEWER WORKFLOW DECISION MODAL -->
+  <div class="modal-backdrop" *ngIf="showReviewDecisionModal()" (click)="showReviewDecisionModal.set(false)">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon" [ngClass]="pendingDecisionType().toLowerCase()">
+            <span *ngIf="pendingDecisionType() === 'Approved'">✅</span>
+            <span *ngIf="pendingDecisionType() === 'ChangesRequested'">⚠️</span>
+            <span *ngIf="pendingDecisionType() === 'Rejected'">❌</span>
+          </div>
+          <div>
+            <h3>Confirm Review Decision: {{ pendingDecisionType() }}</h3>
+            <span class="modal-subtitle">{{ selectedDocument()?.title }}</span>
+          </div>
+        </div>
+        <button class="close-btn" (click)="showReviewDecisionModal.set(false)">✕</button>
+      </div>
+
+      <form [formGroup]="decisionForm" (ngSubmit)="confirmReviewDecision()">
+        <div class="decision-prompt-message">
+          <p *ngIf="pendingDecisionType() === 'Approved'">
+            Approving this document will mark it as compliant and finalize the lifecycle state. You can include an optional sign-off note.
+          </p>
+          <p *ngIf="pendingDecisionType() === 'ChangesRequested'">
+            Please specify the exact revisions, clarifications, or missing items the submitter needs to correct before re-uploading.
+          </p>
+          <p *ngIf="pendingDecisionType() === 'Rejected'">
+            Please provide the justification or policy violation that caused this submission to be rejected.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label>Reviewer Feedback Note / Decision Justification</label>
+          <textarea formControlName="feedbackNote" rows="4" class="form-input"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="showReviewDecisionModal.set(false)">Cancel</button>
+          <button 
+            type="submit" 
+            class="btn" 
+            [ngClass]="{
+              'btn-approve': pendingDecisionType() === 'Approved',
+              'btn-changes': pendingDecisionType() === 'ChangesRequested',
+              'btn-reject': pendingDecisionType() === 'Rejected'
+            }">
+            Apply Decision ({{ pendingDecisionType() }})
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. CREATE USER MODAL (Admin) -->
+  <div class="modal-backdrop" *ngIf="showCreateUserModal()" (click)="showCreateUserModal.set(false)">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon">👤</div>
+          <h3>Add Organization Member</h3>
+        </div>
+        <button class="close-btn" (click)="showCreateUserModal.set(false)">✕</button>
+      </div>
+
+      <form [formGroup]="createUserForm" (ngSubmit)="createNewUser()">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" formControlName="fullName" placeholder="e.g. Jordan Smith" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label>Work Email *</label>
+          <input type="email" formControlName="email" placeholder="jordan.smith@workflowhub.dev" class="form-input" />
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Assigned Role *</label>
+            <select formControlName="role" class="form-input">
+              <option value="Submitter">Submitter</option>
+              <option value="Reviewer">Reviewer</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Department *</label>
+            <select formControlName="department" class="form-input">
+              <option value="Engineering">Engineering</option>
+              <option value="Architecture & Security">Architecture & Security</option>
+              <option value="Legal & Compliance">Legal & Compliance</option>
+              <option value="DevOps & Platform">DevOps & Platform</option>
+              <option value="Operations">Operations</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Storage Quota (MB) *</label>
+          <input type="number" formControlName="storageQuotaMb" class="form-input" />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="showCreateUserModal.set(false)">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="createUserForm.invalid">
+            Create & Provision Member
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. REAL-TIME TOAST NOTIFICATIONS -->
   <div class="toast-container" *ngIf="toastNotification() as toast">
     <div class="toast" [ngClass]="toast.type">
-      <div class="toast-title">{{ toast.title }}</div>
-      <div class="toast-body">{{ toast.message }}</div>
+      <div class="toast-indicator"></div>
+      <div class="toast-content">
+        <div class="toast-title">{{ toast.title }}</div>
+        <div class="toast-body">{{ toast.message }}</div>
+      </div>
     </div>
   </div>
 </div>

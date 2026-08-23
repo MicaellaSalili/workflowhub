@@ -19,6 +19,8 @@ export class SignalRService {
   public newDocumentSubmitted$ = new Subject<DocumentItem>();
   public commentAdded$ = new Subject<{ documentId: string; comment: DocumentComment }>();
   public notification$ = new Subject<{ title: string; message: string; type: string }>();
+  public systemBroadcast$ = new Subject<{ title: string; message: string; level: string; sender: string }>();
+  public userEvent$ = new Subject<{ type: string; data: any }>();
 
   public startConnection(): void {
     if (this.hubConnection && this.hubConnection.state === signalR.HubConnectionState.Connected) {
@@ -87,6 +89,27 @@ export class SignalRService {
 
     this.hubConnection.on('NotificationReceived', (title: string, message: string, type: string) => {
       this.notification$.next({ title, message, type });
+    });
+
+    this.hubConnection.on('SystemBroadcastReceived', (title: string, message: string, level: string, sender: string) => {
+      this.lastEventTimestamp.set(new Date());
+      this.systemBroadcast$.next({ title, message, level, sender });
+    });
+
+    this.hubConnection.on('UserCreated', (user: any) => {
+      this.userEvent$.next({ type: 'created', data: user });
+    });
+
+    this.hubConnection.on('UserUpdated', (user: any) => {
+      this.userEvent$.next({ type: 'updated', data: user });
+    });
+
+    this.hubConnection.on('UserDeleted', (userId: string) => {
+      this.userEvent$.next({ type: 'deleted', data: userId });
+    });
+
+    this.hubConnection.on('UserRoleChanged', (userId: string, newRole: string, by: string) => {
+      this.userEvent$.next({ type: 'roleChanged', data: { userId, newRole, by } });
     });
   }
 

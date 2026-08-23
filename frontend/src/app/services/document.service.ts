@@ -62,6 +62,17 @@ export class DocumentService {
     }, { headers: this.getAuthHeaders() });
   }
 
+  reviseDocument(id: string, payload: {
+    originalFileName: string;
+    storedFileKey: string;
+    contentType: string;
+    fileSizeBytes: number;
+    storageProvider: StorageProviderType;
+    revisionNotes?: string;
+  }): Observable<DocumentItem> {
+    return this.http.post<DocumentItem>(`${this.apiUrl}/${id}/revise`, payload, { headers: this.getAuthHeaders() });
+  }
+
   addComment(documentId: string, content: string, isInternalNote = false): Observable<DocumentComment> {
     return this.http.post<DocumentComment>(`${this.apiUrl}/${documentId}/comments`, {
       content,

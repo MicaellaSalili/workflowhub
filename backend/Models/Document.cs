@@ -47,6 +47,23 @@ public class Document
 
     public ICollection<DocumentComment> Comments { get; set; } = new List<DocumentComment>();
     public ICollection<DocumentAuditLog> AuditLogs { get; set; } = new List<DocumentAuditLog>();
+    public ICollection<DocumentVersion> VersionHistory { get; set; } = new List<DocumentVersion>();
+}
+
+public class DocumentVersion
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid DocumentId { get; set; }
+    public Document? Document { get; set; }
+    public int VersionNumber { get; set; }
+    public string OriginalFileName { get; set; } = string.Empty;
+    public string StoredFileKey { get; set; } = string.Empty;
+    public string ContentType { get; set; } = "application/octet-stream";
+    public long FileSizeBytes { get; set; }
+    public StorageProviderType StorageProvider { get; set; } = StorageProviderType.LocalFilesystem;
+    public string Notes { get; set; } = string.Empty;
+    public string AuthorName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public class DocumentAuditLog

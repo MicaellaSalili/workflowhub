@@ -42,6 +42,7 @@ public class DocumentController : ControllerBase
             .Include(d => d.AssignedReviewer)
             .Include(d => d.Comments).ThenInclude(c => c.Author)
             .Include(d => d.AuditLogs)
+            .Include(d => d.VersionHistory)
             .AsQueryable();
 
         if (status.HasValue)
@@ -116,6 +117,7 @@ public class DocumentController : ControllerBase
             .Include(d => d.AssignedReviewer)
             .Include(d => d.Comments).ThenInclude(c => c.Author)
             .Include(d => d.AuditLogs)
+            .Include(d => d.VersionHistory)
             .FirstOrDefaultAsync(d => d.Id == id);
 
         if (doc == null)
@@ -158,9 +160,24 @@ public class DocumentController : ControllerBase
             FileSizeBytes = request.FileSizeBytes,
             StorageProvider = request.StorageProvider,
             Status = DocumentStatus.Submitted,
+            VersionNumber = 1,
             SubmitterId = submitter.Id,
             CreatedAt = DateTime.UtcNow
         };
+
+        // Create initial v1 version history entry
+        document.VersionHistory.Add(new DocumentVersion
+        {
+            VersionNumber = 1,
+            OriginalFileName = request.OriginalFileName,
+            StoredFileKey = request.StoredFileKey,
+            ContentType = request.ContentType,
+            FileSizeBytes = request.FileSizeBytes,
+            StorageProvider = request.StorageProvider,
+            Notes = "Initial submission",
+            AuthorName = submitter.FullName,
+            CreatedAt = DateTime.UtcNow
+        });
 
         // Create initial submission audit log
         document.AuditLogs.Add(new DocumentAuditLog
@@ -179,6 +196,7 @@ public class DocumentController : ControllerBase
             .Include(d => d.Submitter)
             .Include(d => d.Comments)
             .Include(d => d.AuditLogs)
+            .Include(d => d.VersionHistory)
             .FirstAsync(d => d.Id == document.Id);
 
         var responseDto = MapToResponse(created);
@@ -215,6 +233,7 @@ public class DocumentController : ControllerBase
                 .Include(d => d.AssignedReviewer)
                 .Include(d => d.Comments).ThenInclude(c => c.Author)
                 .Include(d => d.AuditLogs)
+                .Include(d => d.VersionHistory)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (document == null)
@@ -304,6 +323,125 @@ public class DocumentController : ControllerBase
         {
             _logger.LogError(ex, "Failed to update status for document {DocumentId}", id);
             return StatusCode(500, new { message = "An error occurred while updating the document status.", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Re-uploads and submits a revised version of a document when ChangesRequested.
+    /// Increments the version number and resets status to Submitted.
+    /// </summary>
+    [HttpPost("{id:guid}/revise")]
+    [ProducesResponseType(typeof(DocumentResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReviseDocument(
+        Guid id,
+        [FromBody] DocumentReviseRequest request,
+        [FromHeader(Name = "X-User-Id")] string? submitterUserIdHeader)
+    {
+        try
+        {
+            var document = await _context.Documents
+                .Include(d => d.Submitter)
+                .Include(d => d.AssignedReviewer)
+                .Include(d => d.Comments).ThenInclude(c => c.Author)
+                .Include(d => d.AuditLogs)
+                .Include(d => d.VersionHistory)
+                .FirstOrDefaultAsync(d => d.Id == id);
+
+            if (document == null)
+            {
+                return NotFound(new { message = $"Document with ID '{id}' was not found." });
+            }
+
+            User? submitter = null;
+            if (!string.IsNullOrWhiteSpace(submitterUserIdHeader) && Guid.TryParse(submitterUserIdHeader, out var parsedSubmitterId))
+            {
+                submitter = await _context.Users.FindAsync(parsedSubmitterId);
+            }
+
+            if (submitter == null)
+            {
+                submitter = document.Submitter ?? await _context.Users.FirstOrDefaultAsync();
+            }
+
+            var previousVersion = document.VersionNumber;
+            document.VersionNumber += 1;
+            document.OriginalFileName = request.OriginalFileName;
+            document.StoredFileKey = request.StoredFileKey;
+            document.ContentType = request.ContentType;
+            document.FileSizeBytes = request.FileSizeBytes;
+            document.StorageProvider = request.StorageProvider;
+            document.Status = DocumentStatus.Submitted;
+            document.UpdatedAt = DateTime.UtcNow;
+
+            // Add new version entry to version history
+            document.VersionHistory.Add(new DocumentVersion
+            {
+                VersionNumber = document.VersionNumber,
+                OriginalFileName = request.OriginalFileName,
+                StoredFileKey = request.StoredFileKey,
+                ContentType = request.ContentType,
+                FileSizeBytes = request.FileSizeBytes,
+                StorageProvider = request.StorageProvider,
+                Notes = string.IsNullOrWhiteSpace(request.RevisionNotes) ? $"Revision to v{document.VersionNumber}" : request.RevisionNotes,
+                AuthorName = submitter?.FullName ?? "Submitter",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            var auditEntry = new DocumentAuditLog
+            {
+                DocumentId = document.Id,
+                Action = $"Revised: v{previousVersion} -> v{document.VersionNumber}",
+                PerformedBy = submitter?.FullName ?? "Submitter",
+                Details = string.IsNullOrWhiteSpace(request.RevisionNotes)
+                    ? $"Re-uploaded revised file '{request.OriginalFileName}' ({request.FileSizeBytes / 1024} KB)."
+                    : $"Re-uploaded '{request.OriginalFileName}'. Note: {request.RevisionNotes}",
+                Timestamp = DateTime.UtcNow
+            };
+            _context.DocumentAuditLogs.Add(auditEntry);
+
+            if (!string.IsNullOrWhiteSpace(request.RevisionNotes) && submitter != null)
+            {
+                var newComment = new DocumentComment
+                {
+                    DocumentId = document.Id,
+                    AuthorId = submitter.Id,
+                    Content = $"[Revision v{document.VersionNumber} Submitted] {request.RevisionNotes}",
+                    CreatedAt = DateTime.UtcNow,
+                    IsInternalReviewerNote = false
+                };
+                _context.DocumentComments.Add(newComment);
+            }
+
+            await _context.SaveChangesAsync();
+
+            var updatedResponse = MapToResponse(document);
+
+            try
+            {
+                var noteText = $"Revised to v{document.VersionNumber}. Ready for review.";
+                await _hubContext.Clients.All.DocumentStatusChanged(updatedResponse, noteText);
+                await _hubContext.Clients.Group($"doc_{id}").DocumentStatusChanged(updatedResponse, noteText);
+                await _hubContext.Clients.Group("role_reviewers").NotificationReceived(
+                    "Document Revised",
+                    $"'{document.Title}' (v{document.VersionNumber}) was re-uploaded and is ready for review.",
+                    "info"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "SignalR broadcast failed for document revision");
+            }
+
+            _logger.LogInformation("Document {DocId} revised to v{Version} by {Submitter}", 
+                id, document.VersionNumber, submitter?.FullName);
+
+            return Ok(updatedResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to revise document {DocumentId}", id);
+            return StatusCode(500, new { message = "An error occurred while revising the document.", error = ex.Message });
         }
     }
 
@@ -411,6 +549,20 @@ public class DocumentController : ControllerBase
             CreatedAt: d.CreatedAt,
             UpdatedAt: d.UpdatedAt,
             ReviewedAt: d.ReviewedAt,
+            VersionHistory: d.VersionHistory
+                .OrderByDescending(v => v.VersionNumber)
+                .Select(v => new DocumentVersionResponse(
+                    v.Id,
+                    v.VersionNumber,
+                    v.OriginalFileName,
+                    v.StoredFileKey,
+                    v.ContentType,
+                    v.FileSizeBytes,
+                    v.StorageProvider,
+                    v.Notes,
+                    v.AuthorName,
+                    v.CreatedAt))
+                .ToList(),
             Comments: d.Comments
                 .OrderBy(c => c.CreatedAt)
                 .Select(c => new CommentResponse(
