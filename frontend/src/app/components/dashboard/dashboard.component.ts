@@ -172,22 +172,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   public submitDocument(): void {
-    if (this.uploadForm.invalid || !this.selectedFile) return;
+    if (this.uploadForm.invalid || !this.selectedFile) {
+      this.showToast('Validation Error', 'Please enter a valid title and select a file to submit.', 'danger');
+      return;
+    }
 
     const file = this.selectedFile;
     const formVal = this.uploadForm.value;
     this.isUploading.set(true);
-    this.uploadProgress.set(10);
+    this.uploadProgress.set(15);
 
     // Step 1: Request Pre-signed S3 URL or Local Fallback upload target
     this.storageService.getPresignedUploadUrl(file.name, file.type || 'application/octet-stream', file.size).subscribe({
       next: presignedRes => {
-        this.uploadProgress.set(40);
+        this.uploadProgress.set(45);
 
         // Step 2: Direct Binary PUT to S3 / LocalFiles
         this.storageService.uploadBinaryDirect(presignedRes.uploadUrl, file, presignedRes.requiredHeaders).subscribe({
           next: () => {
-            this.uploadProgress.set(80);
+            this.uploadProgress.set(85);
 
             // Step 3: Register document in PostgreSQL database
             this.docService.createDocument({
@@ -204,17 +207,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 this.uploadProgress.set(100);
                 this.isUploading.set(false);
                 this.showUploadModal.set(false);
+                this.documents.update(docs => [createdDoc, ...docs.filter(d => d.id !== createdDoc.id)]);
                 this.uploadForm.reset({ category: 'Engineering' });
                 this.selectedFile = null;
                 this.showToast('Success', `"${createdDoc.title}" uploaded and queued for review!`, 'success');
+                this.refreshStats();
               },
-              error: () => this.isUploading.set(false)
+              error: err => {
+                this.isUploading.set(false);
+                this.showToast('Database Error', err?.error?.message || 'Failed to record document metadata in database.', 'danger');
+              }
             });
           },
-          error: () => this.isUploading.set(false)
+          error: err => {
+            this.isUploading.set(false);
+            this.showToast('Storage Error', err?.error?.message || 'Failed to upload binary file to storage.', 'danger');
+          }
         });
       },
-      error: () => this.isUploading.set(false)
+      error: err => {
+        this.isUploading.set(false);
+        this.showToast('Upload Error', err?.error?.message || 'Failed to request upload signature from server.', 'danger');
+      }
     });
   }
 

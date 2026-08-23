@@ -42,11 +42,7 @@ export class StorageService {
       headers = headers.set('Content-Type', file.type || 'application/octet-stream');
     }
 
-    return this.http.put(uploadUrl, file, {
-      headers,
-      reportProgress: true,
-      observe: 'events'
-    });
+    return this.http.put(uploadUrl, file, { headers });
   }
 
   /**

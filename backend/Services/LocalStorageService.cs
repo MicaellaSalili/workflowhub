@@ -39,13 +39,8 @@ public class LocalStorageService : IStorageService
 
     public Task<PresignedUploadResponse> GenerateUploadUrlAsync(PresignedUploadRequest request, string uniqueFileKey)
     {
-        var requestContext = _httpContextAccessor.HttpContext?.Request;
-        var baseUrl = requestContext != null
-            ? $"{requestContext.Scheme}://{requestContext.Host}"
-            : "http://localhost:5000";
-
-        // In Local Fallback mode, generate the direct backend upload endpoint
-        var localUploadEndpoint = $"{baseUrl}/api/storage/local-upload/{Uri.EscapeDataString(uniqueFileKey)}";
+        // In Local Fallback mode, generate relative endpoint so it routes seamlessly via current origin / reverse proxy
+        var localUploadEndpoint = $"/api/storage/local-upload/{Uri.EscapeDataString(uniqueFileKey)}";
 
         return Task.FromResult(new PresignedUploadResponse(
             UploadUrl: localUploadEndpoint,
@@ -62,12 +57,7 @@ public class LocalStorageService : IStorageService
 
     public Task<DownloadUrlResponse> GenerateDownloadUrlAsync(string fileKey, string originalFileName, string contentType)
     {
-        var requestContext = _httpContextAccessor.HttpContext?.Request;
-        var baseUrl = requestContext != null
-            ? $"{requestContext.Scheme}://{requestContext.Host}"
-            : "http://localhost:5000";
-
-        var downloadUrl = $"{baseUrl}/api/storage/local-download/{Uri.EscapeDataString(fileKey)}?fileName={Uri.EscapeDataString(originalFileName)}";
+        var downloadUrl = $"/api/storage/local-download/{Uri.EscapeDataString(fileKey)}?fileName={Uri.EscapeDataString(originalFileName)}";
 
         return Task.FromResult(new DownloadUrlResponse(
             DownloadUrl: downloadUrl,
