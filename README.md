@@ -92,10 +92,59 @@ docker-compose ps
 ```
 
 **Access points:**
-- Angular frontend: http://localhost:4200
+- Angular frontend: http://localhost (or http://localhost:4200 when running standalone)
 - Swagger API docs: http://localhost:5000/swagger
 - SignalR WebSocket endpoint: `ws://localhost:5000/hubs/documents`
 - PostgreSQL: `localhost:5432` (credentials from `.env`)
+
+---
+
+## Useful Docker & Development Commands
+
+### Managing Docker Compose Stack
+```bash
+# Start all containers in the background (with build)
+docker-compose up -d --build
+
+# View live aggregate logs across all services
+docker-compose logs -f
+
+# View live logs for a specific service
+docker-compose logs -f backend_api
+docker-compose logs -f frontend_app
+docker-compose logs -f postgres_db
+
+# Check status and health of all containers
+docker-compose ps
+
+# Stop and remove containers and networks
+docker-compose down
+
+# Stop and remove containers, networks, AND persistent volumes (Fresh DB reset)
+docker-compose down -v
+
+# Restart a specific service (e.g. backend after configuration changes)
+docker-compose restart backend_api
+```
+
+### Local Development Tips (Windows / macOS / Linux)
+
+**Frontend Troubleshooting:**
+```bash
+cd frontend
+# If Angular cache causes build anomalies
+rm -rf .angular/cache
+npm start
+```
+
+**Backend Troubleshooting:**
+```bash
+cd backend
+# Database migrations are applied automatically at runtime on startup.
+# To run backend independently with Docker Postgres:
+docker-compose up -d postgres_db
+dotnet run
+```
 
 ---
 

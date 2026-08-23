@@ -26,13 +26,20 @@ export class AuthService {
     );
   }
 
+  getRoleLabel(role: any): string {
+    if (role === 0 || role === 'Submitter' || role === UserRole.Submitter) return 'Submitter';
+    if (role === 1 || role === 'Reviewer' || role === UserRole.Reviewer) return 'Reviewer';
+    if (role === 2 || role === 'Admin' || role === UserRole.Admin) return 'Admin';
+    return String(role || 'Submitter');
+  }
+
   switchUser(user: User): void {
     this.currentUser.set(user);
-    console.log(`[Auth] Switched active user to: ${user.fullName} (${user.role})`);
+    console.log(`[Auth] Switched active user to: ${user.fullName} (${this.getRoleLabel(user.role)})`);
   }
 
   isReviewer(): boolean {
-    const role = this.currentUser().role;
-    return role === UserRole.Reviewer || role === UserRole.Admin;
+    const role = this.currentUser()?.role as any;
+    return role === 'Reviewer' || role === 1 || role === 'Admin' || role === 2 || role === UserRole.Reviewer || role === UserRole.Admin;
   }
 }

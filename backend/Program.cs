@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using WorkflowHub.Api.Data;
@@ -63,6 +64,9 @@ builder.Services.AddSignalR(hubOptions =>
     hubOptions.EnableDetailedErrors = builder.Environment.IsDevelopment();
     hubOptions.KeepAliveInterval = TimeSpan.FromSeconds(15);
     hubOptions.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+}).AddJsonProtocol(options =>
+{
+    options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 // -------------------------------------------------------------
@@ -85,7 +89,11 @@ builder.Services.AddCors(options =>
 // -------------------------------------------------------------
 // 6. Controllers, Swagger, and Health Checks
 // -------------------------------------------------------------
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

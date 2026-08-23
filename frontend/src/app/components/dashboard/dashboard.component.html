@@ -32,7 +32,7 @@
         <label>Active Persona:</label>
         <select [ngModel]="authService.currentUser()" (ngModelChange)="authService.switchUser($event)">
           <option *ngFor="let u of authService.availableUsers()" [ngValue]="u">
-            {{ u.fullName }} ({{ u.role }})
+            {{ u.fullName }} ({{ authService.getRoleLabel(u.role) }})
           </option>
         </select>
       </div>
@@ -152,13 +152,13 @@
             <td><span class="category-chip">{{ doc.category }}</span></td>
             <td>{{ doc.submitterName }}</td>
             <td>
-              <span class="storage-tag" [class.s3]="doc.storageProvider === 'AwsS3'">
-                {{ doc.storageProvider === 'AwsS3' ? 'AWS S3' : 'LocalFiles' }}
+              <span class="storage-tag" [class.s3]="doc.storageProvider === 'AwsS3' || doc.storageProvider === 0">
+                {{ doc.storageProvider === 'AwsS3' || doc.storageProvider === 0 ? 'AWS S3' : 'LocalFiles' }}
               </span>
             </td>
             <td>
-              <span class="status-badge" [ngClass]="doc.status.toLowerCase()">
-                {{ doc.status }}
+              <span class="status-badge" [ngClass]="getStatusClass(doc.status)">
+                {{ getStatusText(doc.status) }}
               </span>
             </td>
             <td>
@@ -177,11 +177,16 @@
     <!-- Right-Hand Document Lifecycle & Audit Inspector -->
     <aside class="detail-sidebar" *ngIf="selectedDocument() as doc">
       <div class="sidebar-header">
-        <div>
+        <div class="header-info">
           <h3>{{ doc.title }}</h3>
-          <span class="version-tag">Version {{ doc.versionNumber }}</span>
+          <div class="meta-row">
+            <span class="version-tag">Version {{ doc.versionNumber }}</span>
+            <span class="status-badge" [ngClass]="getStatusClass(doc.status)">
+              {{ getStatusText(doc.status) }}
+            </span>
+          </div>
         </div>
-        <button class="close-btn" (click)="selectedDocument.set(null)">✕</button>
+        <button class="close-btn" (click)="selectedDocument.set(null)" title="Close Inspector">✕</button>
       </div>
 
       <div class="detail-section">
@@ -190,19 +195,34 @@
       </div>
 
       <!-- Action Panel for Reviewers -->
-      <div class="review-actions-card" *ngIf="authService.isReviewer()">
-        <h4>Review Decision</h4>
-        <p class="sub-text">As a reviewer, update the workflow lifecycle status:</p>
-        <div class="btn-group">
-          <button class="btn btn-approve" (click)="reviewStatusChange(doc, 'Approved', 'Architecture and security review passed.')">
-            Approve
-          </button>
-          <button class="btn btn-warning" (click)="reviewStatusChange(doc, 'ChangesRequested', 'Please revise the API specs and re-upload.')">
-            Request Changes
-          </button>
-          <button class="btn btn-danger" (click)="reviewStatusChange(doc, 'Rejected', 'Does not meet architectural compliance.')">
-            Reject
-          </button>
+      <div class="review-actions-card">
+        <div class="review-header">
+          <h4>Review Workflow Decisions</h4>
+          <span class="persona-indicator" [class.reviewer]="authService.isReviewer()">
+            {{ authService.getRoleLabel(authService.currentUser().role) }} Mode
+          </span>
+        </div>
+
+        <div *ngIf="authService.isReviewer()">
+          <p class="sub-text">Select a workflow decision to transition this document state:</p>
+          <div class="btn-group">
+            <button class="btn btn-approve" (click)="reviewStatusChange(doc, 'Approved', 'Architecture and security review passed.')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Approve
+            </button>
+            <button class="btn btn-warning" (click)="reviewStatusChange(doc, 'ChangesRequested', 'Please revise the specifications and re-upload.')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Request Changes
+            </button>
+            <button class="btn btn-danger" (click)="reviewStatusChange(doc, 'Rejected', 'Does not meet architectural compliance.')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Reject
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="!authService.isReviewer()" class="persona-hint">
+          <p>You are currently in <strong>Submitter</strong> mode. To test approval & rejection workflows, switch to a <strong>Reviewer persona</strong> (e.g. Alex Rivera or Marcus Sterling) from the top navigation bar.</p>
         </div>
       </div>
 

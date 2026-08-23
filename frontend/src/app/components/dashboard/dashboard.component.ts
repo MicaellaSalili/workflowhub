@@ -61,28 +61,51 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const cat = this.selectedCategory();
 
     if (tab === 'pending') {
-      list = list.filter(d => d.status === DocumentStatus.Submitted || d.status === DocumentStatus.UnderReview);
+      list = list.filter(d => {
+        const s = this.getStatusText(d.status);
+        return s === 'Submitted' || s === 'UnderReview';
+      });
     } else if (tab === 'approved') {
-      list = list.filter(d => d.status === DocumentStatus.Approved);
+      list = list.filter(d => this.getStatusText(d.status) === 'Approved');
     } else if (tab === 'changes') {
-      list = list.filter(d => d.status === DocumentStatus.ChangesRequested);
+      list = list.filter(d => this.getStatusText(d.status) === 'ChangesRequested');
     }
 
     if (cat !== 'All') {
-      list = list.filter(d => d.category.toLowerCase() === cat.toLowerCase());
+      list = list.filter(d => (d.category || '').toLowerCase() === cat.toLowerCase());
     }
 
     if (query) {
       list = list.filter(d => 
-        d.title.toLowerCase().includes(query) ||
-        d.description.toLowerCase().includes(query) ||
-        d.originalFileName.toLowerCase().includes(query) ||
-        d.submitterName.toLowerCase().includes(query)
+        (d.title || '').toLowerCase().includes(query) ||
+        (d.description || '').toLowerCase().includes(query) ||
+        (d.originalFileName || '').toLowerCase().includes(query) ||
+        (d.submitterName || '').toLowerCase().includes(query)
       );
     }
 
     return list;
   });
+
+  public getStatusText(status: any): string {
+    if (typeof status === 'number') {
+      const statusMap: Record<number, string> = {
+        0: 'Draft',
+        1: 'Submitted',
+        2: 'UnderReview',
+        3: 'ChangesRequested',
+        4: 'Approved',
+        5: 'Rejected'
+      };
+      return statusMap[status] || 'Unknown';
+    }
+    return status ? String(status) : 'Submitted';
+  }
+
+  public getStatusClass(status: any): string {
+    const text = this.getStatusText(status);
+    return text.toLowerCase();
+  }
 
   ngOnInit(): void {
     this.signalRService.startConnection();
