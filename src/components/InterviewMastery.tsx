@@ -37,8 +37,8 @@ export const InterviewMastery: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-indigo-400" /> HR & Technical Interview Script
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-yellow-400" /> HR & Technical Interview Script
               </span>
               <span className="text-xs text-slate-400">Ready to speak with confidence</span>
             </div>
@@ -51,7 +51,7 @@ export const InterviewMastery: React.FC = () => {
           </div>
 
           <div className="bg-[#0a0a0c] p-3.5 rounded-xl border border-slate-800 shrink-0 self-start">
-            <div className="text-[11px] uppercase tracking-wider text-indigo-400 font-semibold mb-1">
+            <div className="text-[11px] uppercase tracking-wider text-yellow-400 font-semibold mb-1">
               Elevator Pitch (One Sentence)
             </div>
             <p className="text-xs text-slate-300 italic max-w-sm">
@@ -67,9 +67,9 @@ export const InterviewMastery: React.FC = () => {
           <button
             key={cat}
             onClick={() => setFilterCategory(cat)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               filterCategory === cat
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                 : 'bg-[#121216] text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
@@ -90,15 +90,15 @@ export const InterviewMastery: React.FC = () => {
                 onClick={() => setSelectedTopic(topic)}
                 className={`p-4 rounded-xl border cursor-pointer transition-all ${
                   isSelected
-                    ? 'bg-indigo-500/10 border-indigo-500 shadow-md shadow-indigo-950/30 ring-1 ring-indigo-500'
+                    ? 'bg-yellow-400/10 border-yellow-400 shadow-md shadow-yellow-950/30 ring-1 ring-yellow-400'
                     : 'bg-[#121216] border-slate-800 hover:border-slate-700 hover:bg-[#16161b]'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a0a0c] text-indigo-300 border border-slate-800 uppercase">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a0a0c] text-yellow-300 border border-slate-800 uppercase">
                     {topic.category}
                   </span>
-                  <ChevronRight className={`w-4 h-4 transition-transform ${isSelected ? 'text-indigo-400 translate-x-0.5' : 'text-slate-500'}`} />
+                  <ChevronRight className={`w-4 h-4 transition-transform ${isSelected ? 'text-yellow-400 translate-x-0.5' : 'text-slate-500'}`} />
                 </div>
                 <h3 className="text-sm font-bold text-white leading-snug">
                   {topic.question}
@@ -115,7 +115,7 @@ export const InterviewMastery: React.FC = () => {
         <div className="lg:col-span-7 bg-[#121216] rounded-2xl p-6 border border-slate-800 shadow-xl space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
             <div>
-              <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
+              <span className="text-xs font-bold text-yellow-400 uppercase tracking-wider">
                 {selectedTopic.category}
               </span>
               <h2 className="text-lg font-bold text-white mt-0.5">
@@ -132,9 +132,9 @@ export const InterviewMastery: React.FC = () => {
           </div>
 
           {/* Core Elevator Pitch */}
-          <div className="bg-indigo-950/30 border border-indigo-500/30 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs mb-1.5">
-              <Lightbulb className="w-4 h-4 text-indigo-400" />
+          <div className="bg-yellow-950/20 border border-yellow-400/30 rounded-xl p-4">
+            <div className="flex items-center gap-2 text-yellow-300 font-bold text-xs mb-1.5">
+              <Lightbulb className="w-4 h-4 text-yellow-400" />
               Quick Answer Pitch (Say this first):
             </div>
             <p className="text-sm text-slate-200 leading-relaxed font-medium">
@@ -164,7 +164,7 @@ export const InterviewMastery: React.FC = () => {
             </h4>
             <div className="flex flex-wrap gap-2">
               {selectedTopic.keyHighlights.map((hl, idx) => (
-                <span key={idx} className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#0a0a0c] text-indigo-300 border border-slate-800">
+                <span key={idx} className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#0a0a0c] text-yellow-300 border border-slate-800">
                   ✓ {hl}
                 </span>
               ))}
@@ -174,10 +174,10 @@ export const InterviewMastery: React.FC = () => {
           {/* Code Reference Footer */}
           <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
             <span className="flex items-center gap-1.5">
-              <FileCode className="w-3.5 h-3.5 text-indigo-400" />
+              <FileCode className="w-3.5 h-3.5 text-yellow-400" />
               Inspected Code Reference:
             </span>
-            <code className="bg-[#0a0a0c] text-indigo-300 border border-slate-800 px-2 py-0.5 rounded font-mono text-[11px]">
+            <code className="bg-[#0a0a0c] text-yellow-300 border border-slate-800 px-2 py-0.5 rounded font-mono text-[11px]">
               {selectedTopic.codeReference}
             </code>
           </div>

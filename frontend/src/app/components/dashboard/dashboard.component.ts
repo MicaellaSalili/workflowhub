@@ -22,11 +22,13 @@ import { SignalRService } from '../../services/signalr.service';
 import { StorageService } from '../../services/storage.service';
 import { AuthService } from '../../services/auth.service';
 import { AdminService } from '../../services/admin.service';
+import { ToastService } from '../../services/toast.service';
+import { ReviewModalComponent, ReviewDecisionType } from '../review-modal/review-modal.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReviewModalComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -36,6 +38,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public storageService = inject(StorageService);
   public authService = inject(AuthService);
   public adminService = inject(AdminService);
+  public toastService = inject(ToastService);
   private fb = inject(FormBuilder);
 
   // Main UI Mode & Tabs
@@ -75,7 +78,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public pendingDecisionType = signal<'Approved' | 'ChangesRequested' | 'Rejected'>('Approved');
 
   // Real-time notifications & broadcasts
-  public toastNotification = signal<{ title: string; message: string; type: string } | null>(null);
+  public toastNotification = computed(() => this.toastService.activeToast());
   public activeBroadcastBanner = signal<{ title: string; message: string; level: string; sender: string } | null>(null);
 
   // Forms
@@ -448,53 +451,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // --- REVIEWER ACTIONS & WORKFLOW DECISION MODAL ---
-  public openDecisionModal(doc: DocumentItem, decision: 'Approved' | 'ChangesRequested' | 'Rejected'): void {
+  public openDecisionModal(doc: DocumentItem, decision: ReviewDecisionType = 'Approved'): void {
     this.selectedDocument.set(doc);
     this.pendingDecisionType.set(decision);
-    
-    // Set default feedback notes based on decision
-    if (decision === 'Approved') {
-      this.decisionForm.setValue({ feedbackNote: 'Architecture, security, and compliance requirements verified and approved.' });
-    } else if (decision === 'ChangesRequested') {
-      this.decisionForm.setValue({ feedbackNote: 'Please update the specifications and diagrams in Section 3, then re-upload.' });
-    } else {
-      this.decisionForm.setValue({ feedbackNote: 'Does not comply with enterprise architecture standards.' });
-    }
-
     this.showReviewDecisionModal.set(true);
   }
 
-  public confirmReviewDecision(): void {
-    const doc = this.selectedDocument();
-    if (!doc) return;
+  public openReviewModal(doc: DocumentItem, decision: ReviewDecisionType = 'Approved'): void {
+    this.openDecisionModal(doc, decision);
+  }
 
-    const newStatus = this.pendingDecisionType();
-    const note = this.decisionForm.value.feedbackNote || '';
-
-    // Optimistic UI update
-    const previousStatus = doc.status;
-    const optimisticDoc: DocumentItem = {
-      ...doc,
-      status: newStatus as any
-    };
-    this.selectedDocument.set(optimisticDoc);
-    this.documents.update(docs => docs.map(d => d.id === doc.id ? optimisticDoc : d));
-    this.showReviewDecisionModal.set(false);
-
-    this.docService.updateStatus(doc.id, newStatus, note).subscribe({
-      next: updated => {
-        this.selectedDocument.set(updated);
-        this.documents.update(docs => docs.map(d => d.id === updated.id ? updated : d));
-        this.refreshStats();
-        this.showToast('Decision Applied', `Document "${doc.title}" marked as ${newStatus}.`, 'success');
-      },
-      error: err => {
-        const reverted: DocumentItem = { ...doc, status: previousStatus };
-        this.selectedDocument.set(reverted);
-        this.documents.update(docs => docs.map(d => d.id === doc.id ? reverted : d));
-        this.showToast('Update Failed', err?.error?.message || 'Failed to update workflow decision.', 'danger');
-      }
-    });
+  public onReviewStatusUpdated(updatedDoc: DocumentItem): void {
+    this.selectedDocument.set(updatedDoc);
+    this.documents.update(docs => docs.map(d => d.id === updatedDoc.id ? updatedDoc : d));
+    this.refreshStats();
   }
 
   // --- COMMENTS & REVIEWS ---
@@ -652,7 +622,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   public showToast(title: string, message: string, type: string): void {
-    this.toastNotification.set({ title, message, type });
-    setTimeout(() => this.toastNotification.set(null), 5000);
+    this.toastService.show(title, message, (type as any) || 'info');
   }
 }

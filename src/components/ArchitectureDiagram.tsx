@@ -58,7 +58,7 @@ export const ArchitectureDiagram: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">
                 Interactive Architecture Engine
               </span>
               <span className="text-xs text-slate-400 font-medium">AWS S3 Pre-Signed + SignalR Hub</span>
@@ -71,9 +71,9 @@ export const ArchitectureDiagram: React.FC = () => {
           <div className="flex items-center gap-2 bg-[#0a0a0c] p-1.5 rounded-xl border border-slate-800 self-start">
             <button
               onClick={() => setStorageMode('s3')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 storageMode === 's3'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -82,7 +82,7 @@ export const ArchitectureDiagram: React.FC = () => {
             </button>
             <button
               onClick={() => setStorageMode('local')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 storageMode === 'local'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                   : 'text-slate-400 hover:text-slate-200'
@@ -99,7 +99,7 @@ export const ArchitectureDiagram: React.FC = () => {
           {/* Node 1: Angular Client */}
           <div className={`p-4 rounded-xl border transition-all ${
             activeStep === 1 || activeStep === 2
-              ? 'border-indigo-500 bg-indigo-950/30 shadow-lg shadow-indigo-950/40 ring-1 ring-indigo-500'
+              ? 'border-yellow-400 bg-yellow-950/30 shadow-lg shadow-yellow-950/40 ring-1 ring-yellow-400'
               : 'border-slate-800 bg-[#0a0a0c]'
           }`}>
             <div className="flex items-center justify-between mb-2">
@@ -139,11 +139,11 @@ export const ArchitectureDiagram: React.FC = () => {
           {/* Node 3: ASP.NET Core API */}
           <div className={`p-4 rounded-xl border transition-all ${
             activeStep === 1 || activeStep === 3 || activeStep === 4
-              ? 'border-indigo-500 bg-indigo-950/30 shadow-lg shadow-indigo-950/40 ring-1 ring-indigo-500'
+              ? 'border-yellow-400 bg-yellow-950/30 shadow-lg shadow-yellow-950/40 ring-1 ring-yellow-400'
               : 'border-slate-800 bg-[#0a0a0c]'
           }`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-xs">
+              <span className="w-8 h-8 rounded-lg bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 flex items-center justify-center font-bold text-xs">
                 .NET
               </span>
               <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">API Server</span>
@@ -182,7 +182,7 @@ export const ArchitectureDiagram: React.FC = () => {
                   onClick={() => setActiveStep(s.step)}
                   className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     activeStep === s.step
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                      ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                       : 'bg-slate-800 text-slate-400 hover:text-white'
                   }`}
                 >
@@ -198,10 +198,10 @@ export const ArchitectureDiagram: React.FC = () => {
               <div key={s.step} className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <span className="text-indigo-400">{s.title}</span>
+                    <span className="text-yellow-400">{s.title}</span>
                     <span className="text-xs font-normal text-slate-400">({s.subtitle})</span>
                   </h3>
-                  <code className="text-xs bg-slate-900 border border-slate-800 text-indigo-300 px-2.5 py-1 rounded font-mono">
+                  <code className="text-xs bg-slate-900 border border-slate-800 text-yellow-300 px-2.5 py-1 rounded font-mono">
                     {s.badge}
                   </code>
                 </div>
@@ -217,7 +217,7 @@ export const ArchitectureDiagram: React.FC = () => {
       {/* Comparison Grid: S3 Direct vs Fallback vs Anti-pattern Bento Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div className="bg-[#121216] rounded-xl p-5 border border-slate-800 shadow-sm">
-          <div className="flex items-center gap-2 text-indigo-400 mb-2">
+          <div className="flex items-center gap-2 text-yellow-400 mb-2">
             <Zap className="w-5 h-5" />
             <h4 className="font-bold text-white text-sm">Direct S3 Pre-Signed (Production)</h4>
           </div>

@@ -118,7 +118,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-slate-200 flex flex-col font-sans antialiased selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen bg-[#0a0a0c] text-slate-200 flex flex-col font-sans antialiased selection:bg-yellow-400 selection:text-slate-950">
       {/* Enterprise Top Navigation Bar */}
       <header className="sticky top-0 z-40 bg-[#0a0a0c]/90 backdrop-blur-md border-b border-slate-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -126,13 +126,13 @@ export default function App() {
             
             {/* Brand Mark & Title */}
             <div className="flex items-center gap-3 shrink-0">
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/30 tracking-wider text-sm">
+              <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center font-bold text-slate-950 shadow-lg shadow-yellow-400/30 tracking-wider text-sm">
                 WH
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">WorkflowHub</h1>
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 uppercase tracking-wider">
                     Enterprise
                   </span>
                 </div>
@@ -146,9 +146,9 @@ export default function App() {
             <nav className="flex items-center gap-1 bg-[#121216] p-1 rounded-xl border border-slate-800">
               <button
                 onClick={() => setActiveTab('documents')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'documents'
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                    ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
@@ -158,9 +158,9 @@ export default function App() {
 
               <button
                 onClick={() => setActiveTab('activity')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'activity'
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                    ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
@@ -171,13 +171,13 @@ export default function App() {
 
               <button
                 onClick={() => setActiveTab('admin')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'admin'
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                    ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
-                <Shield className="w-3.5 h-3.5 text-purple-400" />
+                <Shield className="w-3.5 h-3.5 text-yellow-400" />
                 <span>Team & Governance</span>
               </button>
             </nav>
@@ -192,7 +192,7 @@ export default function App() {
 
               {/* Persona / Role Selector */}
               <div className="flex items-center gap-2 bg-[#121216] border border-slate-800 rounded-xl px-3 py-1.5 text-xs shadow-sm">
-                <div className="w-6 h-6 rounded-full bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 flex items-center justify-center font-bold text-[10px] shrink-0">
+                <div className="w-6 h-6 rounded-full bg-yellow-400/20 border border-yellow-400/40 text-yellow-400 flex items-center justify-center font-bold text-[10px] shrink-0">
                   {currentUser.avatar}
                 </div>
                 <select
@@ -281,7 +281,7 @@ export default function App() {
                   ? 'bg-rose-950/90 border-rose-500/40 text-rose-100'
                   : toast.type === 'warning'
                   ? 'bg-amber-950/90 border-amber-500/40 text-amber-100'
-                  : 'bg-indigo-950/90 border-indigo-500/40 text-indigo-100'
+                  : 'bg-yellow-950/90 border-yellow-500/40 text-yellow-100'
               }`}
             >
               <div className="w-2 h-2 rounded-full mt-1.5 shrink-0 bg-current"></div>

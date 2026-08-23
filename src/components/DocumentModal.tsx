@@ -113,13 +113,13 @@ export const DocumentModal: React.FC<Props> = ({
       <div className="bg-[#121216] rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-800 animate-in fade-in zoom-in-95 duration-150 text-slate-200">
         <div className="flex items-center justify-between pb-4 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <div className="p-2.5 rounded-xl bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">
               <Upload className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Submit New Workflow Document</h3>
               <span className="text-xs text-slate-400">
-                Active Storage: <strong className="text-indigo-300">{activeStorageMode === 'AwsS3' ? 'AWS S3 Direct Cloud Bucket' : 'LocalFiles/ Disk Fallback'}</strong>
+                Active Storage: <strong className="text-yellow-300">{activeStorageMode === 'AwsS3' ? 'AWS S3 Direct Cloud Bucket' : 'LocalFiles/ Disk Fallback'}</strong>
               </span>
             </div>
           </div>
@@ -137,21 +137,21 @@ export const DocumentModal: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => handlePresetSelect('Zero-Trust Network Perimeter RFC', 'Security', 'ZeroTrust_Perimeter_Architecture_v1.pdf', 3840000)}
-              className="px-2.5 py-1 text-xs bg-slate-900 hover:bg-indigo-600 hover:text-white border border-slate-800 rounded-md font-medium text-slate-300 transition-all cursor-pointer"
+              className="px-2.5 py-1 text-xs bg-slate-900 hover:bg-yellow-400 hover:text-slate-950 border border-slate-800 rounded-md font-bold text-slate-300 transition-all cursor-pointer"
             >
               + Zero-Trust Security RFC
             </button>
             <button
               type="button"
               onClick={() => handlePresetSelect('PostgreSQL Multi-Region Sharding Design', 'Architecture', 'PostgreSQL_Sharding_Plan_2026.docx', 5120000)}
-              className="px-2.5 py-1 text-xs bg-slate-900 hover:bg-indigo-600 hover:text-white border border-slate-800 rounded-md font-medium text-slate-300 transition-all cursor-pointer"
+              className="px-2.5 py-1 text-xs bg-slate-900 hover:bg-yellow-400 hover:text-slate-950 border border-slate-800 rounded-md font-bold text-slate-300 transition-all cursor-pointer"
             >
               + DB Sharding Architecture
             </button>
             <button
               type="button"
               onClick={() => handlePresetSelect('Enterprise GraphQL Federation Gateway RFC', 'Engineering', 'GraphQL_Federation_Gateway.pdf', 2900000)}
-              className="px-2.5 py-1 text-xs bg-slate-900 hover:bg-indigo-600 hover:text-white border border-slate-800 rounded-md font-medium text-slate-300 transition-all cursor-pointer"
+              className="px-2.5 py-1 text-xs bg-slate-900 hover:bg-yellow-400 hover:text-slate-950 border border-slate-800 rounded-md font-bold text-slate-300 transition-all cursor-pointer"
             >
               + GraphQL Gateway RFC
             </button>
@@ -167,7 +167,7 @@ export const DocumentModal: React.FC<Props> = ({
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Q3 Microservices Event Architecture Spec"
-              className="w-full px-3.5 py-2 text-sm bg-[#0a0a0c] border border-slate-800 rounded-lg text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              className="w-full px-3.5 py-2 text-sm bg-[#0a0a0c] border border-slate-800 rounded-lg text-slate-100 placeholder-slate-500 focus:border-yellow-400 focus:outline-none"
             />
           </div>
 
@@ -177,7 +177,7 @@ export const DocumentModal: React.FC<Props> = ({
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value as any)}
-                className="w-full px-3.5 py-2 text-sm bg-[#0a0a0c] border border-slate-800 rounded-lg text-slate-200 focus:border-indigo-500 focus:outline-none cursor-pointer"
+                className="w-full px-3.5 py-2 text-sm bg-[#0a0a0c] border border-slate-800 rounded-lg text-slate-200 focus:border-yellow-400 focus:outline-none cursor-pointer"
               >
                 <option value="Architecture" className="bg-[#121216]">Architecture</option>
                 <option value="Engineering" className="bg-[#121216]">Engineering</option>
@@ -202,7 +202,7 @@ export const DocumentModal: React.FC<Props> = ({
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Brief abstract or review notes for architects..."
-              className="w-full px-3.5 py-2 text-sm bg-[#0a0a0c] border border-slate-800 rounded-lg text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              className="w-full px-3.5 py-2 text-sm bg-[#0a0a0c] border border-slate-800 rounded-lg text-slate-100 placeholder-slate-500 focus:border-yellow-400 focus:outline-none"
             />
           </div>
 
@@ -210,7 +210,7 @@ export const DocumentModal: React.FC<Props> = ({
             <label className="block text-xs font-semibold text-slate-300 mb-1">
               Document File (PDF, DOCX, ZIP, XLSX - Max 25MB) *
             </label>
-            <div className="border-2 border-dashed border-slate-800 rounded-xl p-4 text-center hover:border-indigo-500 transition-all bg-[#0a0a0c]">
+            <div className="border-2 border-dashed border-slate-800 rounded-xl p-4 text-center hover:border-yellow-400 transition-all bg-[#0a0a0c]">
               <input
                 type="file"
                 id="doc-upload"
@@ -218,8 +218,8 @@ export const DocumentModal: React.FC<Props> = ({
                 className="hidden"
               />
               <label htmlFor="doc-upload" className="cursor-pointer flex flex-col items-center gap-1">
-                <FileText className="w-8 h-8 text-indigo-400" />
-                <span className="text-xs font-semibold text-indigo-400 hover:underline">
+                <FileText className="w-8 h-8 text-yellow-400" />
+                <span className="text-xs font-bold text-yellow-400 hover:underline">
                   {fileName ? `Change file: ${fileName}` : 'Click to select file or drag here'}
                 </span>
                 <span className="text-[11px] text-slate-500">
@@ -231,14 +231,14 @@ export const DocumentModal: React.FC<Props> = ({
 
           {/* Active Uploading Stage Bar */}
           {isSimulatingUpload && (
-            <div className="p-3.5 bg-indigo-950/80 border border-indigo-500/30 text-white rounded-xl space-y-2">
+            <div className="p-3.5 bg-yellow-950/40 border border-yellow-500/30 text-white rounded-xl space-y-2">
               <div className="flex items-center justify-between text-xs font-semibold">
-                <span className="text-indigo-200">{uploadStage}</span>
-                <span className="text-indigo-300">{uploadProgress}%</span>
+                <span className="text-yellow-200">{uploadStage}</span>
+                <span className="text-yellow-300">{uploadProgress}%</span>
               </div>
               <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-indigo-500 h-full transition-all duration-300 rounded-full"
+                  className="bg-yellow-400 h-full transition-all duration-300 rounded-full"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -257,7 +257,7 @@ export const DocumentModal: React.FC<Props> = ({
             <button
               type="submit"
               disabled={!title || !fileName || isSimulatingUpload}
-              className="px-5 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-lg transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2 text-xs font-bold bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 text-slate-950 rounded-lg transition-all shadow-lg shadow-yellow-400/30 flex items-center gap-1.5 cursor-pointer"
             >
               <Upload className="w-3.5 h-3.5" />
               {isSimulatingUpload ? 'Uploading Stream...' : 'Submit Document'}

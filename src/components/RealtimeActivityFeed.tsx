@@ -280,7 +280,7 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
       case 'DocumentCreated':
         return {
           label: 'Upload Event',
-          color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+          color: 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20',
           icon: <FileText className="w-3.5 h-3.5" />
         };
       case 'DocumentStatusChanged':
@@ -299,7 +299,7 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
       case 'UserCreated':
         return {
           label: 'RBAC Event',
-          color: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+          color: 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20',
           icon: <Shield className="w-3.5 h-3.5" />
         };
       default:
@@ -338,7 +338,7 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
             <button
               onClick={simulateNewSubmission}
               disabled={isSimulating}
-              className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all disabled:opacity-50 cursor-pointer"
+              className="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 rounded-lg text-xs font-bold flex items-center gap-1 transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-yellow-400/20"
               title="Simulate a team member uploading a new architectural document"
             >
               <FileText className="w-3.5 h-3.5" />
@@ -399,7 +399,7 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
                     onClick={() => setSelectedEventFilter(cat)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                       selectedEventFilter === cat
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-yellow-400 text-slate-950 font-bold shadow-xs'
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
@@ -426,7 +426,7 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
                       onClick={() => setSelectedLog(log)}
                       className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3.5 ${
                         isSelected
-                          ? 'bg-indigo-950/40 border-indigo-500/50 shadow-md'
+                          ? 'bg-yellow-950/30 border-yellow-400/50 shadow-md'
                           : 'bg-[#0a0a0c] border-slate-800/80 hover:border-slate-700 hover:bg-[#0e0e12]'
                       }`}
                     >
@@ -450,7 +450,7 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
                         </div>
 
                         <div className="text-[11px] text-slate-500 mt-0.5 font-mono">
-                          Method: <strong className="text-indigo-400">{log.event}</strong>
+                          Method: <strong className="text-yellow-400">{log.event}</strong>
                         </div>
                       </div>
                     </div>
@@ -466,7 +466,7 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <div className="flex items-center gap-2">
-                <Code className="w-4 h-4 text-indigo-400" />
+                <Code className="w-4 h-4 text-yellow-400" />
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">WebSocket Payload Inspector</h3>
               </div>
               <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
@@ -479,7 +479,7 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
                 <div className="p-3 bg-[#0a0a0c] rounded-xl border border-slate-800 space-y-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">RPC Event Name:</span>
-                    <span className="font-mono font-bold text-indigo-400">{selectedLog.event}</span>
+                    <span className="font-mono font-bold text-yellow-400">{selectedLog.event}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Dispatched At:</span>
@@ -520,7 +520,7 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
             </div>
             <div className="p-2 bg-[#0a0a0c] rounded-lg border border-slate-800">
               <div className="text-slate-500 text-[10px] uppercase font-bold">Auto-Reconnect</div>
-              <div className="text-indigo-400 font-bold font-mono mt-0.5">Enabled</div>
+              <div className="text-yellow-400 font-bold font-mono mt-0.5">Enabled</div>
             </div>
           </div>
         </div>

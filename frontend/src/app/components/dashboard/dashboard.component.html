@@ -326,6 +326,15 @@
                     <button class="btn btn-sm btn-inspect" (click)="$event.stopPropagation(); selectedDocument.set(doc)">
                       Inspect
                     </button>
+                    <!-- Quick Review Button for Reviewer -->
+                    <button 
+                      *ngIf="authService.isReviewer()" 
+                      class="btn btn-sm btn-review-quick" 
+                      (click)="$event.stopPropagation(); openReviewModal(doc)"
+                      title="Open Review Decision Dialog">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      Review
+                    </button>
                     <!-- Quick Revision Button for Submitter if changes requested -->
                     <button 
                       *ngIf="getStatusText(doc.status) === 'ChangesRequested'" 
@@ -980,57 +989,13 @@
   </div>
 
   <!-- 3. REVIEWER WORKFLOW DECISION MODAL -->
-  <div class="modal-backdrop" *ngIf="showReviewDecisionModal()" (click)="showReviewDecisionModal.set(false)">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title-wrap">
-          <div class="modal-icon" [ngClass]="pendingDecisionType().toLowerCase()">
-            <span *ngIf="pendingDecisionType() === 'Approved'">✅</span>
-            <span *ngIf="pendingDecisionType() === 'ChangesRequested'">⚠️</span>
-            <span *ngIf="pendingDecisionType() === 'Rejected'">❌</span>
-          </div>
-          <div>
-            <h3>Confirm Review Decision: {{ pendingDecisionType() }}</h3>
-            <span class="modal-subtitle">{{ selectedDocument()?.title }}</span>
-          </div>
-        </div>
-        <button class="close-btn" (click)="showReviewDecisionModal.set(false)">✕</button>
-      </div>
-
-      <form [formGroup]="decisionForm" (ngSubmit)="confirmReviewDecision()">
-        <div class="decision-prompt-message">
-          <p *ngIf="pendingDecisionType() === 'Approved'">
-            Approving this document will mark it as compliant and finalize the lifecycle state. You can include an optional sign-off note.
-          </p>
-          <p *ngIf="pendingDecisionType() === 'ChangesRequested'">
-            Please specify the exact revisions, clarifications, or missing items the submitter needs to correct before re-uploading.
-          </p>
-          <p *ngIf="pendingDecisionType() === 'Rejected'">
-            Please provide the justification or policy violation that caused this submission to be rejected.
-          </p>
-        </div>
-
-        <div class="form-group">
-          <label>Reviewer Feedback Note / Decision Justification</label>
-          <textarea formControlName="feedbackNote" rows="4" class="form-input"></textarea>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" (click)="showReviewDecisionModal.set(false)">Cancel</button>
-          <button 
-            type="submit" 
-            class="btn" 
-            [ngClass]="{
-              'btn-approve': pendingDecisionType() === 'Approved',
-              'btn-changes': pendingDecisionType() === 'ChangesRequested',
-              'btn-reject': pendingDecisionType() === 'Rejected'
-            }">
-            Apply Decision ({{ pendingDecisionType() }})
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <app-review-modal
+    [isOpen]="showReviewDecisionModal()"
+    [document]="selectedDocument()"
+    [initialDecision]="pendingDecisionType()"
+    (close)="showReviewDecisionModal.set(false)"
+    (statusUpdated)="onReviewStatusUpdated($event)">
+  </app-review-modal>
 
   <!-- 4. CREATE USER MODAL (Admin) -->
   <div class="modal-backdrop" *ngIf="showCreateUserModal()" (click)="showCreateUserModal.set(false)">
@@ -1091,14 +1056,20 @@
     </div>
   </div>
 
-  <!-- 5. REAL-TIME TOAST NOTIFICATIONS -->
+  <!-- 5. REAL-TIME TOAST NOTIFICATIONS (WITH GLOBAL 500 ERROR PARSER) -->
   <div class="toast-container" *ngIf="toastNotification() as toast">
-    <div class="toast" [ngClass]="toast.type">
-      <div class="toast-indicator"></div>
+    <div class="toast" [ngClass]="toast.type" (click)="toastService.dismiss()">
+      <div class="toast-indicator">
+        <span *ngIf="toast.type === 'danger'" class="toast-icon">⚠️</span>
+        <span *ngIf="toast.type === 'warning'" class="toast-icon">🔔</span>
+        <span *ngIf="toast.type === 'success'" class="toast-icon">✅</span>
+        <span *ngIf="toast.type === 'info'" class="toast-icon">ℹ️</span>
+      </div>
       <div class="toast-content">
         <div class="toast-title">{{ toast.title }}</div>
         <div class="toast-body">{{ toast.message }}</div>
       </div>
+      <button class="toast-close" (click)="$event.stopPropagation(); toastService.dismiss()" title="Dismiss notification">✕</button>
     </div>
   </div>
 </div>

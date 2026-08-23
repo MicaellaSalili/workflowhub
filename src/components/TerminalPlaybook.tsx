@@ -113,7 +113,7 @@ npm run test:headless`
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <span className="p-1.5 rounded-lg bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">
                 <Terminal className="w-4 h-4" />
               </span>
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">DevOps & Terminal Playbook</span>
@@ -131,9 +131,9 @@ npm run test:headless`
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeCategory === cat
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                    ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                     : 'bg-[#0a0a0c] text-slate-400 hover:text-slate-200 border border-slate-800'
                 }`}
               >
@@ -158,7 +158,7 @@ npm run test:headless`
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
                   </div>
                   <span className="text-xs font-bold text-slate-200">{item.title}</span>
-                  <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                  <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-yellow-400/15 text-yellow-300 border border-yellow-400/30">
                     {item.category}
                   </span>
                 </div>

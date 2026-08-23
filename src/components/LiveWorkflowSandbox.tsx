@@ -9,6 +9,7 @@ import {
 } from '../types/workflow';
 import { INITIAL_DOCUMENTS, INITIAL_PERSONAS } from '../data/mockDocuments';
 import { DocumentModal } from './DocumentModal';
+import { ReviewModal, ReviewDecision } from './ReviewModal';
 import { 
   Upload, 
   Cloud, 
@@ -101,7 +102,6 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
 
   // Review modal state
   const [reviewAction, setReviewAction] = useState<DocumentStatus | null>(null);
-  const [reviewRemarks, setReviewRemarks] = useState<string>('');
 
   const selectedDoc = documents.find(d => d.id === selectedDocId) || documents[0] || INITIAL_DOCUMENTS[0];
 
@@ -255,7 +255,6 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
 
     setDocuments(documents.map(d => d.id === selectedDoc.id ? updatedDoc : d));
     setReviewAction(null);
-    setReviewRemarks('');
 
     // SignalR broadcast
     addWsLog('DocumentStatusChanged', `Status Updated: "${selectedDoc.title}" -> ${newStatus}`, {
@@ -355,7 +354,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                 ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                 : currentUser.role === 'Reviewer'
                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                : 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'
             }`}>
               {currentUser.role} View
             </span>
@@ -385,9 +384,9 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                 setStorageMode('AwsS3');
                 showToast('Storage Provider', 'Using AWS S3 Direct Pre-Signed URLs', 'info');
               }}
-              className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                 storageMode === 'AwsS3'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -399,7 +398,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                 setStorageMode('LocalFilesystem');
                 showToast('Storage Provider', 'Using Local Disk Volume Fallback', 'info');
               }}
-              className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                 storageMode === 'LocalFilesystem'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                   : 'text-slate-400 hover:text-slate-200'
@@ -413,7 +412,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
           {/* New Document Button */}
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/30 cursor-pointer"
+            className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-yellow-400/30 cursor-pointer"
           >
             <Upload className="w-4 h-4" />
             <span>Upload Document</span>
@@ -432,7 +431,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
               {currentUser.role === 'Submitter' ? myDocs : totalDocs}
             </div>
           </div>
-          <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <div className="p-2.5 rounded-xl bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">
             <FileText className="w-5 h-5" />
           </div>
         </div>
@@ -483,14 +482,14 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                   placeholder="Filter by title, author, file name..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-[#0a0a0c] border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  className="w-full pl-9 pr-3 py-2 bg-[#0a0a0c] border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:border-yellow-400 focus:outline-none"
                 />
               </div>
 
               <select
                 value={selectedCategory}
                 onChange={e => setSelectedCategory(e.target.value)}
-                className="px-3 py-2 bg-[#0a0a0c] border border-slate-800 rounded-xl text-xs text-slate-300 font-medium focus:border-indigo-500 focus:outline-none cursor-pointer"
+                className="px-3 py-2 bg-[#0a0a0c] border border-slate-800 rounded-xl text-xs text-slate-300 font-medium focus:border-yellow-400 focus:outline-none cursor-pointer"
               >
                 <option value="All">All Categories</option>
                 <option value="Architecture">Architecture</option>
@@ -505,9 +504,9 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
             <div className="flex items-center gap-1.5 py-3 overflow-x-auto">
               <button
                 onClick={() => setActiveTab('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'all'
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                    ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                 }`}
               >
@@ -573,12 +572,12 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                     onClick={() => setSelectedDocId(doc.id)}
                     className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                       isSelected
-                        ? 'bg-indigo-950/30 border-indigo-500/60 shadow-lg shadow-indigo-950/20'
+                        ? 'bg-yellow-950/20 border-yellow-400/60 shadow-lg shadow-yellow-950/20'
                         : 'bg-[#0a0a0c] border-slate-800/80 hover:bg-[#0e0e12] hover:border-slate-700'
                     }`}
                   >
                     <div className="flex items-start gap-3.5">
-                      <div className="p-2.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-xl shrink-0 mt-0.5">
+                      <div className="p-2.5 bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 rounded-xl shrink-0 mt-0.5">
                         <FileText className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
@@ -630,7 +629,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
             <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-800">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 px-2 py-0.5 rounded">
                     {selectedDoc.category}
                   </span>
                   <span className="text-xs text-slate-400 font-mono">v{selectedDoc.versionNumber}.0</span>
@@ -646,7 +645,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                 className="p-2.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                 title="Download file payload via pre-signed URL"
               >
-                <Download className="w-4 h-4 text-indigo-400" />
+                <Download className="w-4 h-4 text-yellow-400" />
               </button>
             </div>
 
@@ -664,13 +663,13 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                 </div>
 
                 <div className="flex-1 h-0.5 bg-slate-800 mx-2">
-                  <div className={`h-full ${selectedDoc.status !== 'Submitted' ? 'bg-indigo-500' : 'bg-transparent'}`} />
+                  <div className={`h-full ${selectedDoc.status !== 'Submitted' ? 'bg-yellow-400' : 'bg-transparent'}`} />
                 </div>
 
                 <div className="flex flex-col items-center gap-1">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[11px] border ${
                     selectedDoc.status === 'UnderReview' || selectedDoc.status === 'ChangesRequested' || selectedDoc.status === 'Approved'
-                      ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                      ? 'bg-yellow-400/20 text-yellow-300 border-yellow-400/40'
                       : 'bg-slate-900 text-slate-500 border-slate-800'
                   }`}>
                     2
@@ -679,7 +678,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                 </div>
 
                 <div className="flex-1 h-0.5 bg-slate-800 mx-2">
-                  <div className={`h-full ${selectedDoc.status === 'Approved' || selectedDoc.status === 'Rejected' || selectedDoc.status === 'ChangesRequested' ? 'bg-indigo-500' : 'bg-transparent'}`} />
+                  <div className={`h-full ${selectedDoc.status === 'Approved' || selectedDoc.status === 'Rejected' || selectedDoc.status === 'ChangesRequested' ? 'bg-yellow-400' : 'bg-transparent'}`} />
                 </div>
 
                 <div className="flex flex-col items-center gap-1">
@@ -705,7 +704,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
             <div className="mt-4 p-4 rounded-xl border border-slate-800 bg-[#0a0a0c] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                  <Shield className="w-3.5 h-3.5 text-yellow-400" />
                   <span>Review Decision Center</span>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${
@@ -790,7 +789,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                     </div>
                     <div className="flex items-center justify-between text-slate-400">
                       <span>Storage Provider:</span>
-                      <span className="font-semibold text-indigo-400 flex items-center gap-1">
+                      <span className="font-semibold text-yellow-400 flex items-center gap-1">
                         {selectedDoc.storageProvider === 'AwsS3' ? <Cloud className="w-3.5 h-3.5" /> : <HardDrive className="w-3.5 h-3.5" />}
                         {selectedDoc.storageProvider === 'AwsS3' ? 'AWS S3 Cloud Bucket' : 'Local Filesystem Volume'}
                       </span>
@@ -826,7 +825,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                       <div key={comment.id} className="p-3 rounded-xl bg-[#0a0a0c] border border-slate-800 text-xs">
                         <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
                           <span className="font-bold text-slate-200">{comment.authorName}</span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">
                             {comment.authorRole}
                           </span>
                         </div>
@@ -847,12 +846,12 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                       placeholder={`Post comment as ${currentUser.name}...`}
                       value={newCommentText}
                       onChange={e => setNewCommentText(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-[#0a0a0c] border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                      className="flex-1 px-3 py-2 bg-[#0a0a0c] border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:border-yellow-400 focus:outline-none"
                     />
                     <button
                       type="submit"
                       disabled={!newCommentText.trim()}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                      className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
                     >
                       <Send className="w-3.5 h-3.5" />
                     </button>
@@ -871,7 +870,7 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
                           {new Date(log.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
-                      <div className="text-[11px] text-indigo-400 mt-0.5">By {log.performedBy}</div>
+                      <div className="text-[11px] text-yellow-400 mt-0.5">By {log.performedBy}</div>
                       <div className="text-slate-400 text-[11px] mt-1 leading-relaxed">{log.details}</div>
                     </div>
                   ))}
@@ -883,62 +882,16 @@ export const LiveWorkflowSandbox: React.FC<LiveWorkflowSandboxProps> = ({
 
       </div>
 
-      {/* Review Decision Modal Prompt */}
-      {reviewAction && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#121216] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-800 animate-in fade-in zoom-in-95 duration-150 text-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Shield className="w-4 h-4 text-indigo-400" />
-                Confirm Review Decision: <span className="text-indigo-300">{reviewAction}</span>
-              </h3>
-              <button onClick={() => setReviewAction(null)} className="text-slate-400 hover:text-white cursor-pointer">
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <p className="text-xs text-slate-300">
-                You are executing a workflow state transition for <strong>{selectedDoc.title}</strong> as <strong>{currentUser.name}</strong> ({currentUser.role}).
-              </p>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">
-                  Review Remarks / Audit Note {reviewAction === 'ChangesRequested' ? '*' : '(Optional)'}
-                </label>
-                <textarea
-                  rows={3}
-                  value={reviewRemarks}
-                  onChange={e => setReviewRemarks(e.target.value)}
-                  placeholder="Provide architectural feedback or compliance justification..."
-                  className="w-full px-3.5 py-2 text-xs bg-[#0a0a0c] border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setReviewAction(null)}
-                  className="px-3.5 py-1.5 text-xs text-slate-400 hover:bg-slate-800 rounded-lg cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleStatusChange(reviewAction, reviewRemarks)}
-                  className={`px-4 py-2 text-xs font-bold text-white rounded-xl shadow-lg transition-all cursor-pointer ${
-                    reviewAction === 'Approved' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30' :
-                    reviewAction === 'ChangesRequested' ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30' :
-                    'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
-                  }`}
-                >
-                  Confirm & Broadcast Decision
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Review Decision Modal */}
+      <ReviewModal
+        isOpen={!!reviewAction}
+        onClose={() => setReviewAction(null)}
+        document={selectedDoc}
+        currentUser={currentUser}
+        initialDecision={(reviewAction as ReviewDecision) || 'Approved'}
+        onConfirmDecision={(status, note) => handleStatusChange(status, note)}
+        onShowToast={showToast}
+      />
 
       {/* Upload Document Modal */}
       <DocumentModal

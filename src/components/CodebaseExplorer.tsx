@@ -52,7 +52,7 @@ export const CodebaseExplorer: React.FC = () => {
       <div className="bg-[#121216] rounded-2xl p-5 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <span className="p-1.5 rounded-lg bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">
               <FolderTree className="w-4 h-4" />
             </span>
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Production Codebase Inspector</span>
@@ -70,13 +70,13 @@ export const CodebaseExplorer: React.FC = () => {
               placeholder="Search file path or keyword..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 bg-[#0a0a0c] border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 w-56 focus:outline-none focus:border-indigo-500"
+              className="pl-8 pr-3 py-1.5 bg-[#0a0a0c] border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 w-56 focus:outline-none focus:border-yellow-400"
             />
           </div>
 
           <button
             onClick={downloadAllAsBundle}
-            className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg shadow-indigo-600/30 cursor-pointer"
+            className="px-3.5 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-yellow-400/30 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             Export Code Bundle
@@ -90,9 +90,9 @@ export const CodebaseExplorer: React.FC = () => {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeCategory === cat
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                ? 'bg-yellow-400 text-slate-950 shadow-md shadow-yellow-400/30'
                 : 'bg-[#121216] text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
@@ -116,12 +116,12 @@ export const CodebaseExplorer: React.FC = () => {
                 onClick={() => setSelectedFile(file)}
                 className={`p-2.5 rounded-lg text-xs cursor-pointer transition-all ${
                   isSelected
-                    ? 'bg-indigo-500/15 text-indigo-300 font-semibold border border-indigo-500/30'
+                    ? 'bg-yellow-400/15 text-yellow-300 font-semibold border border-yellow-400/30'
                     : 'text-slate-400 hover:bg-slate-900/60 hover:text-slate-200 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <FileCode className={`w-4 h-4 shrink-0 ${isSelected ? 'text-indigo-400' : 'text-slate-500'}`} />
+                  <FileCode className={`w-4 h-4 shrink-0 ${isSelected ? 'text-yellow-400' : 'text-slate-500'}`} />
                   <span className="font-mono text-xs truncate flex-1">{file.path}</span>
                 </div>
                 <div className="text-[11px] text-slate-500 mt-1 line-clamp-1 font-normal">
@@ -138,7 +138,7 @@ export const CodebaseExplorer: React.FC = () => {
           <div className="flex items-center justify-between px-4 py-3 bg-[#121216] border-b border-slate-800">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs font-bold text-slate-200">{selectedFile.path}</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
                 {selectedFile.language}
               </span>
             </div>

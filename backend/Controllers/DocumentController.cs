@@ -69,12 +69,20 @@ public class DocumentController : ControllerBase
             query = query.Where(d => d.SubmitterId == submitterId.Value);
         }
 
-        var docs = await query
-            .OrderByDescending(d => d.CreatedAt)
-            .Select(d => MapToResponse(d))
-            .ToListAsync();
+        try
+        {
+            var entities = await query
+                .OrderByDescending(d => d.CreatedAt)
+                .ToListAsync();
 
-        return Ok(docs);
+            var docs = entities.Select(MapToResponse).ToList();
+            return Ok(docs);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve documents list");
+            return StatusCode(500, new { message = "An error occurred while retrieving documents.", error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -549,7 +557,7 @@ public class DocumentController : ControllerBase
             CreatedAt: d.CreatedAt,
             UpdatedAt: d.UpdatedAt,
             ReviewedAt: d.ReviewedAt,
-            VersionHistory: d.VersionHistory
+            VersionHistory: (d.VersionHistory ?? new List<DocumentVersion>())
                 .OrderByDescending(v => v.VersionNumber)
                 .Select(v => new DocumentVersionResponse(
                     v.Id,
@@ -563,7 +571,7 @@ public class DocumentController : ControllerBase
                     v.AuthorName,
                     v.CreatedAt))
                 .ToList(),
-            Comments: d.Comments
+            Comments: (d.Comments ?? new List<DocumentComment>())
                 .OrderBy(c => c.CreatedAt)
                 .Select(c => new CommentResponse(
                     c.Id, 
@@ -574,7 +582,7 @@ public class DocumentController : ControllerBase
                     c.IsInternalReviewerNote, 
                     c.CreatedAt))
                 .ToList(),
-            AuditLogs: d.AuditLogs
+            AuditLogs: (d.AuditLogs ?? new List<DocumentAuditLog>())
                 .OrderByDescending(a => a.Timestamp)
                 .Select(a => new AuditLogResponse(
                     a.Id,

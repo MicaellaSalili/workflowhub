@@ -1,0 +1,129 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-icon" [ngClass]="selectedDecision().toLowerCase()">
+          <span *ngIf="selectedDecision() === 'Approved'">✅</span>
+          <span *ngIf="selectedDecision() === 'ChangesRequested'">⚠️</span>
+          <span *ngIf="selectedDecision() === 'Rejected'">❌</span>
+        </div>
+        <div>
+          <h3>Review Document Decision</h3>
+          <span class="modal-subtitle" *ngIf="document">{{ document.title }} (v{{ document.versionNumber }})</span>
+        </div>
+      </div>
+      <button class="close-btn" (click)="onCancel()" title="Close dialog">✕</button>
+    </div>
+
+    <!-- Document Info Card -->
+    <div class="document-summary-card" *ngIf="document">
+      <div class="summary-row">
+        <div class="summary-item">
+          <span class="meta-label">Submitter</span>
+          <strong class="meta-value">{{ document.submitterName }}</strong>
+        </div>
+        <div class="summary-item">
+          <span class="meta-label">Category</span>
+          <span class="category-tag">{{ document.category }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="meta-label">Current Status</span>
+          <span class="status-tag status-{{ document.status.toLowerCase() }}">{{ document.status }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Decision Selection Buttons -->
+    <div class="decision-selector-section">
+      <label class="section-label">Select Review Outcome *</label>
+      <div class="decision-button-grid">
+        <!-- Approve Button -->
+        <button
+          type="button"
+          class="decision-choice-btn btn-approve"
+          [class.active]="selectedDecision() === 'Approved'"
+          (click)="setDecision('Approved')">
+          <div class="btn-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="btn-text-wrap">
+            <span class="btn-title">Approve</span>
+            <span class="btn-subtitle">Pass architecture & compliance</span>
+          </div>
+          <div class="selection-check" *ngIf="selectedDecision() === 'Approved'">●</div>
+        </button>
+
+        <!-- Request Changes Button -->
+        <button
+          type="button"
+          class="decision-choice-btn btn-changes"
+          [class.active]="selectedDecision() === 'ChangesRequested'"
+          (click)="setDecision('ChangesRequested')">
+          <div class="btn-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          </div>
+          <div class="btn-text-wrap">
+            <span class="btn-title">Request Changes</span>
+            <span class="btn-subtitle">Ask submitter to re-upload v{{ document ? document.versionNumber + 1 : 2 }}</span>
+          </div>
+          <div class="selection-check" *ngIf="selectedDecision() === 'ChangesRequested'">●</div>
+        </button>
+
+        <!-- Reject Button -->
+        <button
+          type="button"
+          class="decision-choice-btn btn-reject"
+          [class.active]="selectedDecision() === 'Rejected'"
+          (click)="setDecision('Rejected')">
+          <div class="btn-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+          <div class="btn-text-wrap">
+            <span class="btn-title">Reject</span>
+            <span class="btn-subtitle">Decline submission</span>
+          </div>
+          <div class="selection-check" *ngIf="selectedDecision() === 'Rejected'">●</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Reviewer Remarks Form -->
+    <form [formGroup]="reviewForm" (ngSubmit)="onSubmitReview()" class="review-form">
+      <div class="form-group">
+        <div class="label-row">
+          <label for="feedbackNote">
+            Reviewer Remarks / Feedback Note
+            <span *ngIf="selectedDecision() === 'ChangesRequested' || selectedDecision() === 'Rejected'" class="required-star">*</span>
+          </label>
+          <span class="guidance-hint">
+            {{ selectedDecision() === 'Approved' ? 'Optional sign-off remarks' : 'Specify required corrections' }}
+          </span>
+        </div>
+        <textarea
+          id="feedbackNote"
+          formControlName="feedbackNote"
+          rows="4"
+          class="form-input"
+          placeholder="Enter feedback or architectural justification..."></textarea>
+      </div>
+
+      <!-- Modal Action Buttons -->
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isSubmitting()">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary-decision"
+          [ngClass]="'btn-' + selectedDecision().toLowerCase()"
+          [disabled]="isSubmitting()">
+          <span *ngIf="isSubmitting()" class="spinner-sm"></span>
+          <span *ngIf="!isSubmitting()">
+            Confirm {{ selectedDecision() === 'Approved' ? 'Approval' : selectedDecision() === 'ChangesRequested' ? 'Change Request' : 'Rejection' }}
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
