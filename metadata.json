@@ -1,0 +1,6 @@
+{
+  "name": "WorkflowHub",
+  "description": "Production-grade full-stack document workflow platform with ASP.NET Core, Angular, SignalR, PostgreSQL, and AWS S3 hybrid pre-signed storage architecture.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

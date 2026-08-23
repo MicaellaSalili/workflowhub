@@ -1,0 +1,315 @@
+<div class="workflow-dashboard">
+  <!-- Top Bar -->
+  <header class="top-nav">
+    <div class="brand">
+      <div class="logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+      </div>
+      <div>
+        <h1 class="app-title">WorkflowHub</h1>
+        <span class="app-sub">Enterprise Document Lifecycle & Review</span>
+      </div>
+    </div>
+
+    <div class="top-controls">
+      <!-- Storage Environment Pill -->
+      <div class="storage-pill" [class.aws]="storageInfo()?.isAwsS3Configured">
+        <span class="dot"></span>
+        <span class="provider-name">
+          {{ storageInfo()?.isAwsS3Configured ? 'AWS S3 Direct Storage' : 'Local Fallback Storage (LocalFiles/)' }}
+        </span>
+      </div>
+
+      <!-- SignalR Connection Status -->
+      <div class="signalr-pill" [class.connected]="signalRService.isConnected()">
+        <span class="status-indicator"></span>
+        <span>{{ signalRService.isConnected() ? 'SignalR Live WS' : 'Connecting WS...' }}</span>
+        <span class="users-count" title="Active Hub Clients">({{ signalRService.activeUsers() }} online)</span>
+      </div>
+
+      <!-- User Role Switcher (Submitter vs Reviewer) -->
+      <div class="user-switcher">
+        <label>Active Persona:</label>
+        <select [ngModel]="authService.currentUser()" (ngModelChange)="authService.switchUser($event)">
+          <option *ngFor="let u of authService.availableUsers()" [ngValue]="u">
+            {{ u.fullName }} ({{ u.role }})
+          </option>
+        </select>
+      </div>
+
+      <!-- New Upload Action -->
+      <button class="btn btn-primary" (click)="showUploadModal.set(true)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Submit Document
+      </button>
+    </div>
+  </header>
+
+  <!-- Metrics Bar -->
+  <section class="stats-grid" *ngIf="stats() as s">
+    <div class="stat-card">
+      <div class="stat-meta">
+        <span class="stat-label">Total Submissions</span>
+        <span class="stat-value">{{ s.totalDocuments }}</span>
+      </div>
+      <div class="stat-icon purple">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-meta">
+        <span class="stat-label">In Review Queue</span>
+        <span class="stat-value">{{ s.pendingReview }}</span>
+      </div>
+      <div class="stat-icon yellow">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-meta">
+        <span class="stat-label">Approved Documents</span>
+        <span class="stat-value">{{ s.approved }}</span>
+      </div>
+      <div class="stat-icon green">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-meta">
+        <span class="stat-label">Storage Optimization</span>
+        <span class="stat-value">Direct S3 Pre-Signed</span>
+      </div>
+      <div class="stat-icon blue">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter & Tab Toolbar -->
+  <section class="toolbar">
+    <div class="tabs">
+      <button class="tab-btn" [class.active]="activeTab() === 'all'" (click)="activeTab.set('all')">
+        All Documents ({{ documents().length }})
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'pending'" (click)="activeTab.set('pending')">
+        Pending Review
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'approved'" (click)="activeTab.set('approved')">
+        Approved
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'changes'" (click)="activeTab.set('changes')">
+        Changes Requested
+      </button>
+    </div>
+
+    <div class="filters">
+      <input 
+        type="text" 
+        placeholder="Search title, author, file..." 
+        [ngModel]="searchQuery()" 
+        (ngModelChange)="searchQuery.set($event)"
+        class="search-input"
+      />
+      <select [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)" class="select-input">
+        <option value="All">All Categories</option>
+        <option value="Engineering">Engineering</option>
+        <option value="Architecture">Architecture</option>
+        <option value="Security">Security</option>
+        <option value="Legal">Legal</option>
+        <option value="Operations">Operations</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- Main Grid: Documents Table + Detail Inspector Panel -->
+  <div class="content-split">
+    <!-- Document Table -->
+    <div class="table-container">
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th>Document</th>
+            <th>Category</th>
+            <th>Submitter</th>
+            <th>Storage Layer</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of filteredDocuments()" 
+              [class.selected]="selectedDocument()?.id === doc.id"
+              (click)="selectedDocument.set(doc)">
+            <td>
+              <div class="doc-title-cell">
+                <strong>{{ doc.title }}</strong>
+                <span class="file-meta">{{ doc.originalFileName }} ({{ (doc.fileSizeBytes / 1024).toFixed(0) }} KB)</span>
+              </div>
+            </td>
+            <td><span class="category-chip">{{ doc.category }}</span></td>
+            <td>{{ doc.submitterName }}</td>
+            <td>
+              <span class="storage-tag" [class.s3]="doc.storageProvider === 'AwsS3'">
+                {{ doc.storageProvider === 'AwsS3' ? 'AWS S3' : 'LocalFiles' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="doc.status.toLowerCase()">
+                {{ doc.status }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm" (click)="$event.stopPropagation(); selectedDocument.set(doc)">
+                Inspect
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredDocuments().length === 0">
+            <td colspan="6" class="empty-state">No documents match the current filter.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Right-Hand Document Lifecycle & Audit Inspector -->
+    <aside class="detail-sidebar" *ngIf="selectedDocument() as doc">
+      <div class="sidebar-header">
+        <div>
+          <h3>{{ doc.title }}</h3>
+          <span class="version-tag">Version {{ doc.versionNumber }}</span>
+        </div>
+        <button class="close-btn" (click)="selectedDocument.set(null)">✕</button>
+      </div>
+
+      <div class="detail-section">
+        <label>Description</label>
+        <p class="desc-text">{{ doc.description || 'No description provided.' }}</p>
+      </div>
+
+      <!-- Action Panel for Reviewers -->
+      <div class="review-actions-card" *ngIf="authService.isReviewer()">
+        <h4>Review Decision</h4>
+        <p class="sub-text">As a reviewer, update the workflow lifecycle status:</p>
+        <div class="btn-group">
+          <button class="btn btn-approve" (click)="reviewStatusChange(doc, 'Approved', 'Architecture and security review passed.')">
+            Approve
+          </button>
+          <button class="btn btn-warning" (click)="reviewStatusChange(doc, 'ChangesRequested', 'Please revise the API specs and re-upload.')">
+            Request Changes
+          </button>
+          <button class="btn btn-danger" (click)="reviewStatusChange(doc, 'Rejected', 'Does not meet architectural compliance.')">
+            Reject
+          </button>
+        </div>
+      </div>
+
+      <!-- File & Storage Specs -->
+      <div class="detail-section">
+        <label>File Information</label>
+        <div class="file-box">
+          <div>
+            <strong>{{ doc.originalFileName }}</strong>
+            <span class="key-text">Key: {{ doc.storedFileKey }}</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" (click)="downloadDocument(doc)">Download</button>
+        </div>
+      </div>
+
+      <!-- Real-Time Comments & Discussion -->
+      <div class="detail-section comments-section">
+        <label>Review Thread & Comments ({{ doc.comments.length || 0 }})</label>
+        <div class="comments-list">
+          <div class="comment-bubble" *ngFor="let c of doc.comments">
+            <div class="comment-meta">
+              <strong>{{ c.authorName }}</strong>
+              <span class="role-chip">{{ c.authorRole }}</span>
+              <span class="time">{{ c.createdAt | date:'shortTime' }}</span>
+            </div>
+            <p>{{ c.content }}</p>
+          </div>
+          <p class="empty-text" *ngIf="!doc.comments || doc.comments.length === 0">
+            No comments yet.
+          </p>
+        </div>
+      </div>
+
+      <!-- Audit Trail -->
+      <div class="detail-section">
+        <label>Audit History</label>
+        <div class="audit-timeline">
+          <div class="audit-item" *ngFor="let log of doc.auditLogs">
+            <span class="audit-dot"></span>
+            <div>
+              <strong>{{ log.action }}</strong>
+              <span class="audit-user">by {{ log.performedBy }}</span>
+              <p class="audit-details">{{ log.details }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Upload Modal -->
+  <div class="modal-backdrop" *ngIf="showUploadModal()" (click)="showUploadModal.set(false)">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Submit Document to WorkflowHub</h3>
+        <button class="close-btn" (click)="showUploadModal.set(false)">✕</button>
+      </div>
+
+      <form [formGroup]="uploadForm" (ngSubmit)="submitDocument()">
+        <div class="form-group">
+          <label>Document Title *</label>
+          <input type="text" formControlName="title" placeholder="e.g. Q3 Microservices Migration Architecture" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label>Category *</label>
+          <select formControlName="category" class="form-input">
+            <option value="Engineering">Engineering</option>
+            <option value="Architecture">Architecture</option>
+            <option value="Security">Security</option>
+            <option value="Legal">Legal</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea formControlName="description" rows="3" placeholder="Summary of the changes or proposal..." class="form-input"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Select File (Max 25MB - PDF, DOCX, XLSX, ZIP) *</label>
+          <input type="file" (change)="onFileSelected($event)" class="file-input" />
+          <span class="file-hint" *ngIf="selectedFile">
+            Selected: {{ selectedFile.name }} ({{ (selectedFile.size / 1024).toFixed(0) }} KB)
+          </span>
+        </div>
+
+        <div class="upload-progress-bar" *ngIf="isUploading()">
+          <div class="progress-fill" [style.width.%]="uploadProgress()"></div>
+          <span>Uploading via Direct Pre-Signed Stream ({{ uploadProgress() }}%)...</span>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="showUploadModal.set(false)">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="uploadForm.invalid || !selectedFile || isUploading()">
+            {{ isUploading() ? 'Uploading...' : 'Submit to Queue' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Real-time Toast Notifications -->
+  <div class="toast-container" *ngIf="toastNotification() as toast">
+    <div class="toast" [ngClass]="toast.type">
+      <div class="toast-title">{{ toast.title }}</div>
+      <div class="toast-body">{{ toast.message }}</div>
+    </div>
+  </div>
+</div>

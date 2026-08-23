@@ -1,0 +1,78 @@
+services:
+  # -------------------------------------------------------------
+  # PostgreSQL Database Service
+  # -------------------------------------------------------------
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: workflowhub_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-WorkflowSecret2026!}
+      POSTGRES_DB: ${POSTGRES_DB:-workflowhub_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - workflowhub_network
+
+  # -------------------------------------------------------------
+  # ASP.NET Core Web API (.NET 10) Service
+  # -------------------------------------------------------------
+  backend_api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: workflowhub_api
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Host=postgres_db;Port=5432;Database=${POSTGRES_DB:-workflowhub_db};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-WorkflowSecret2026!}
+      # AWS S3 Settings (Leave blank or omit to trigger Local Storage Fallback automatically)
+      - AWS__BucketName=${AWS_S3_BUCKET:-}
+      - AWS__Region=${AWS_REGION:-us-east-1}
+      - AWS__AccessKey=${AWS_ACCESS_KEY_ID:-}
+      - AWS__SecretKey=${AWS_SECRET_ACCESS_KEY:-}
+      - Storage__FallbackLocalPath=/app/LocalFiles
+      - Cors__AllowedOrigins=http://localhost:4200,http://localhost:3000
+    ports:
+      - "5000:5000"
+    volumes:
+      # Persistent volume for local fallback storage directory
+      - local_storage_data:/app/LocalFiles
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - workflowhub_network
+
+  # -------------------------------------------------------------
+  # Angular Frontend (Nginx Production Server)
+  # -------------------------------------------------------------
+  frontend_app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: workflowhub_frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend_api
+    networks:
+      - workflowhub_network
+
+volumes:
+  postgres_data:
+  local_storage_data:
+
+networks:
+  workflowhub_network:
+    driver: bridge

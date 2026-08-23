@@ -1,0 +1,91 @@
+name: WorkflowHub CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # -------------------------------------------------------------
+  # 1. Backend Build & Test (.NET 10)
+  # -------------------------------------------------------------
+  build-and-test-backend:
+    name: Build & Test ASP.NET Core Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK 10.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore NuGet Packages
+        run: dotnet restore ./backend/WorkflowHub.Api.csproj
+
+      - name: Build Backend Solution
+        run: dotnet build ./backend/WorkflowHub.Api.csproj --no-restore --configuration Release
+
+      - name: Run Backend Unit Tests
+        run: dotnet test ./backend/WorkflowHub.Api.csproj --no-build --configuration Release --verbosity normal
+
+  # -------------------------------------------------------------
+  # 2. Frontend Build & Lint (Angular Standalone)
+  # -------------------------------------------------------------
+  build-and-test-frontend:
+    name: Build & Lint Angular Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: './frontend/package.json'
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Lint Angular Code
+        working-directory: ./frontend
+        run: npm run lint --if-present
+
+      - name: Build Angular Production Bundle
+        working-directory: ./frontend
+        run: npm run build -- --configuration production
+
+  # -------------------------------------------------------------
+  # 3. Docker Container Build Verification
+  # -------------------------------------------------------------
+  verify-docker-builds:
+    name: Verify Docker Container Builds
+    needs: [build-and-test-backend, build-and-test-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: workflowhub-backend:test
+
+      - name: Build Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: workflowhub-frontend:test
