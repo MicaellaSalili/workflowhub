@@ -246,7 +246,6 @@ public class DocumentController : ControllerBase
             document.Status = request.NewStatus;
             document.UpdatedAt = DateTime.UtcNow;
             document.AssignedReviewerId = reviewer.Id;
-            document.AssignedReviewer = reviewer;
 
             if (request.NewStatus == DocumentStatus.Approved || request.NewStatus == DocumentStatus.Rejected)
             {
@@ -264,7 +263,7 @@ public class DocumentController : ControllerBase
                     : $"Reviewer Note: {request.ReasonOrNote}",
                 Timestamp = DateTime.UtcNow
             };
-            document.AuditLogs.Add(auditEntry);
+            _context.DocumentAuditLogs.Add(auditEntry);
 
             // If a reason was provided with the status change, also append a comment
             if (!string.IsNullOrWhiteSpace(request.ReasonOrNote))
@@ -273,12 +272,11 @@ public class DocumentController : ControllerBase
                 {
                     DocumentId = document.Id,
                     AuthorId = reviewer.Id,
-                    Author = reviewer,
                     Content = $"[Status update to {request.NewStatus}] {request.ReasonOrNote}",
                     CreatedAt = DateTime.UtcNow,
                     IsInternalReviewerNote = false
                 };
-                document.Comments.Add(newComment);
+                _context.DocumentComments.Add(newComment);
             }
 
             await _context.SaveChangesAsync();
@@ -318,49 +316,78 @@ public class DocumentController : ControllerBase
     public async Task<IActionResult> AddComment(
         Guid id, 
         [FromBody] AddCommentRequest request,
-        [FromHeader(Name = "X-User-Id")] Guid? authorUserId)
+        [FromHeader(Name = "X-User-Id")] string? authorUserIdHeader)
     {
-        if (string.IsNullOrWhiteSpace(request.Content))
+        try
         {
-            return BadRequest(new { message = "Comment content cannot be empty." });
+            if (string.IsNullOrWhiteSpace(request.Content))
+            {
+                return BadRequest(new { message = "Comment content cannot be empty." });
+            }
+
+            var document = await _context.Documents.FindAsync(id);
+            if (document == null)
+            {
+                return NotFound(new { message = $"Document with ID '{id}' was not found." });
+            }
+
+            User? author = null;
+            if (!string.IsNullOrWhiteSpace(authorUserIdHeader) && Guid.TryParse(authorUserIdHeader, out var parsedAuthorId))
+            {
+                author = await _context.Users.FindAsync(parsedAuthorId);
+            }
+
+            if (author == null)
+            {
+                var defaultAuthorId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+                author = await _context.Users.FindAsync(defaultAuthorId) ?? await _context.Users.FirstOrDefaultAsync();
+            }
+
+            if (author == null)
+            {
+                return BadRequest(new { message = "No valid author user found." });
+            }
+
+            var comment = new DocumentComment
+            {
+                DocumentId = id,
+                AuthorId = author.Id,
+                Content = request.Content.Trim(),
+                IsInternalReviewerNote = request.IsInternalReviewerNote,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.DocumentComments.Add(comment);
+            await _context.SaveChangesAsync();
+
+            var commentDto = new CommentResponse(
+                Id: comment.Id,
+                AuthorId: author.Id,
+                AuthorName: author.FullName,
+                AuthorRole: author.Role,
+                Content: comment.Content,
+                IsInternalReviewerNote: comment.IsInternalReviewerNote,
+                CreatedAt: comment.CreatedAt
+            );
+
+            // Real-time broadcast to all viewers in document discussion room
+            try
+            {
+                await _hubContext.Clients.Group($"doc_{id}").DocumentCommentAdded(id, commentDto);
+                await _hubContext.Clients.All.DocumentCommentAdded(id, commentDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "SignalR broadcast failed for new comment");
+            }
+
+            return CreatedAtAction(nameof(GetDocumentById), new { id }, commentDto);
         }
-
-        var document = await _context.Documents.FindAsync(id);
-        if (document == null)
+        catch (Exception ex)
         {
-            return NotFound(new { message = $"Document with ID '{id}' was not found." });
+            _logger.LogError(ex, "Failed to add comment to document {DocumentId}", id);
+            return StatusCode(500, new { message = "An error occurred while posting comment.", error = ex.Message });
         }
-
-        var authorId = authorUserId ?? Guid.Parse("22222222-2222-2222-2222-222222222222");
-        var author = await _context.Users.FindAsync(authorId) ?? await _context.Users.FirstAsync();
-
-        var comment = new DocumentComment
-        {
-            DocumentId = id,
-            AuthorId = author.Id,
-            Content = request.Content.Trim(),
-            IsInternalReviewerNote = request.IsInternalReviewerNote,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.DocumentComments.Add(comment);
-        await _context.SaveChangesAsync();
-
-        var commentDto = new CommentResponse(
-            Id: comment.Id,
-            AuthorId: author.Id,
-            AuthorName: author.FullName,
-            AuthorRole: author.Role,
-            Content: comment.Content,
-            IsInternalReviewerNote: comment.IsInternalReviewerNote,
-            CreatedAt: comment.CreatedAt
-        );
-
-        // Real-time broadcast to all viewers in document discussion room
-        await _hubContext.Clients.Group($"doc_{id}").DocumentCommentAdded(id, commentDto);
-        await _hubContext.Clients.All.DocumentCommentAdded(id, commentDto);
-
-        return CreatedAtAction(nameof(GetDocumentById), new { id }, commentDto);
     }
 
     private static DocumentResponse MapToResponse(Document d)
