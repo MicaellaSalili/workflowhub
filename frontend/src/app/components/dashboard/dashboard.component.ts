@@ -258,9 +258,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public readonly DocumentStatus = DocumentStatus;
 
   public reviewStatusChange(doc: DocumentItem, newStatus: DocumentStatus | string, note: string): void {
+    // Optimistic UI update
+    const previousStatus = doc.status;
+    const updatedOptimistic: DocumentItem = {
+      ...doc,
+      status: newStatus as DocumentStatus
+    };
+    this.selectedDocument.set(updatedOptimistic);
+    this.documents.update(docs => docs.map(d => d.id === doc.id ? updatedOptimistic : d));
+
     this.docService.updateStatus(doc.id, newStatus, note).subscribe({
       next: updated => {
         this.selectedDocument.set(updated);
+        this.documents.update(docs => docs.map(d => d.id === updated.id ? updated : d));
+        this.refreshStats();
+        this.showToast('Workflow Updated', `Document "${doc.title}" marked as ${newStatus}.`, 'success');
+      },
+      error: err => {
+        // Revert on failure
+        const reverted: DocumentItem = { ...doc, status: previousStatus };
+        this.selectedDocument.set(reverted);
+        this.documents.update(docs => docs.map(d => d.id === doc.id ? reverted : d));
+        this.showToast('Update Failed', err?.error?.message || 'Failed to update workflow status.', 'danger');
       }
     });
   }

@@ -206,68 +206,107 @@ public class DocumentController : ControllerBase
     public async Task<IActionResult> UpdateStatus(
         Guid id, 
         [FromBody] DocumentStatusChangeRequest request,
-        [FromHeader(Name = "X-User-Id")] Guid? reviewerUserId)
+        [FromHeader(Name = "X-User-Id")] string? reviewerUserIdHeader)
     {
-        var document = await _context.Documents
-            .Include(d => d.Submitter)
-            .Include(d => d.Comments).ThenInclude(c => c.Author)
-            .Include(d => d.AuditLogs)
-            .FirstOrDefaultAsync(d => d.Id == id);
-
-        if (document == null)
+        try
         {
-            return NotFound(new { message = $"Document with ID '{id}' was not found." });
-        }
+            var document = await _context.Documents
+                .Include(d => d.Submitter)
+                .Include(d => d.AssignedReviewer)
+                .Include(d => d.Comments).ThenInclude(c => c.Author)
+                .Include(d => d.AuditLogs)
+                .FirstOrDefaultAsync(d => d.Id == id);
 
-        var reviewerId = reviewerUserId ?? Guid.Parse("22222222-2222-2222-2222-222222222222");
-        var reviewer = await _context.Users.FindAsync(reviewerId) ?? await _context.Users.FirstAsync(u => u.Role == UserRole.Reviewer);
-
-        var previousStatus = document.Status;
-        document.Status = request.NewStatus;
-        document.UpdatedAt = DateTime.UtcNow;
-        document.AssignedReviewerId = reviewer.Id;
-
-        if (request.NewStatus == DocumentStatus.Approved || request.NewStatus == DocumentStatus.Rejected)
-        {
-            document.ReviewedAt = DateTime.UtcNow;
-        }
-
-        // Add audit trail entry
-        var auditEntry = new DocumentAuditLog
-        {
-            Action = $"Status Changed: {previousStatus} -> {request.NewStatus}",
-            PerformedBy = reviewer.FullName,
-            Details = string.IsNullOrWhiteSpace(request.ReasonOrNote) 
-                ? $"Status transitioned to {request.NewStatus}." 
-                : $"Reviewer Note: {request.ReasonOrNote}",
-            Timestamp = DateTime.UtcNow
-        };
-        document.AuditLogs.Add(auditEntry);
-
-        // If a reason was provided with the status change, also append a comment
-        if (!string.IsNullOrWhiteSpace(request.ReasonOrNote))
-        {
-            document.Comments.Add(new DocumentComment
+            if (document == null)
             {
-                AuthorId = reviewer.Id,
-                Content = $"[Status update to {request.NewStatus}] {request.ReasonOrNote}",
-                CreatedAt = DateTime.UtcNow,
-                IsInternalReviewerNote = false
-            });
+                return NotFound(new { message = $"Document with ID '{id}' was not found." });
+            }
+
+            // Robust reviewer resolution
+            User? reviewer = null;
+            if (!string.IsNullOrWhiteSpace(reviewerUserIdHeader) && Guid.TryParse(reviewerUserIdHeader, out var parsedReviewerId))
+            {
+                reviewer = await _context.Users.FindAsync(parsedReviewerId);
+            }
+
+            if (reviewer == null)
+            {
+                var defaultReviewerId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+                reviewer = await _context.Users.FindAsync(defaultReviewerId)
+                    ?? await _context.Users.FirstOrDefaultAsync(u => u.Role == UserRole.Reviewer)
+                    ?? await _context.Users.FirstOrDefaultAsync();
+            }
+
+            if (reviewer == null)
+            {
+                return BadRequest(new { message = "No valid reviewer user found in the system." });
+            }
+
+            var previousStatus = document.Status;
+            document.Status = request.NewStatus;
+            document.UpdatedAt = DateTime.UtcNow;
+            document.AssignedReviewerId = reviewer.Id;
+            document.AssignedReviewer = reviewer;
+
+            if (request.NewStatus == DocumentStatus.Approved || request.NewStatus == DocumentStatus.Rejected)
+            {
+                document.ReviewedAt = DateTime.UtcNow;
+            }
+
+            // Add audit trail entry
+            var auditEntry = new DocumentAuditLog
+            {
+                DocumentId = document.Id,
+                Action = $"Status Changed: {previousStatus} -> {request.NewStatus}",
+                PerformedBy = reviewer.FullName,
+                Details = string.IsNullOrWhiteSpace(request.ReasonOrNote) 
+                    ? $"Status transitioned to {request.NewStatus}." 
+                    : $"Reviewer Note: {request.ReasonOrNote}",
+                Timestamp = DateTime.UtcNow
+            };
+            document.AuditLogs.Add(auditEntry);
+
+            // If a reason was provided with the status change, also append a comment
+            if (!string.IsNullOrWhiteSpace(request.ReasonOrNote))
+            {
+                var newComment = new DocumentComment
+                {
+                    DocumentId = document.Id,
+                    AuthorId = reviewer.Id,
+                    Author = reviewer,
+                    Content = $"[Status update to {request.NewStatus}] {request.ReasonOrNote}",
+                    CreatedAt = DateTime.UtcNow,
+                    IsInternalReviewerNote = false
+                };
+                document.Comments.Add(newComment);
+            }
+
+            await _context.SaveChangesAsync();
+
+            var updatedResponse = MapToResponse(document);
+
+            // Real-time Push via SignalR to document room and global dashboard
+            try
+            {
+                var reasonNote = request.ReasonOrNote ?? string.Empty;
+                await _hubContext.Clients.All.DocumentStatusChanged(updatedResponse, reasonNote);
+                await _hubContext.Clients.Group($"doc_{id}").DocumentStatusChanged(updatedResponse, reasonNote);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "SignalR broadcast failed for document status update");
+            }
+
+            _logger.LogInformation("Document {DocId} status changed from {Old} to {New} by {Reviewer}", 
+                id, previousStatus, request.NewStatus, reviewer.FullName);
+
+            return Ok(updatedResponse);
         }
-
-        await _context.SaveChangesAsync();
-
-        var updatedResponse = MapToResponse(document);
-
-        // Real-time Push via SignalR to document room and global dashboard
-        await _hubContext.Clients.All.DocumentStatusChanged(updatedResponse, request.ReasonOrNote);
-        await _hubContext.Clients.Group($"doc_{id}").DocumentStatusChanged(updatedResponse, request.ReasonOrNote);
-
-        _logger.LogInformation("Document {DocId} status changed from {Old} to {New} by {Reviewer}", 
-            id, previousStatus, request.NewStatus, reviewer.FullName);
-
-        return Ok(updatedResponse);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update status for document {DocumentId}", id);
+            return StatusCode(500, new { message = "An error occurred while updating the document status.", error = ex.Message });
+        }
     }
 
     /// <summary>
