@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "tBAnghJBPrta9r0W2rvf2jnJ4mzC57eTuVDwOqEmSqQ=",
+  "Source": "WorkflowHub.Api",
+  "BasePath": "_content/WorkflowHub.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

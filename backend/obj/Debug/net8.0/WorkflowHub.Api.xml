@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WorkflowHub.Api</name>
+    </assembly>
+    <members>
+        <member name="M:WorkflowHub.Api.Controllers.AdminController.GetUsers(System.String,System.Nullable{WorkflowHub.Api.Models.UserRole})">
+            <summary>
+            Gets a list of all registered users in the organization with administrative metadata.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AdminController.CreateUser(WorkflowHub.Api.DTOs.CreateUserRequest)">
+            <summary>
+            Creates a new user with a specified role (Submitter, Reviewer, or Admin) and broadcasts over SignalR.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AdminController.UpdateUser(System.Guid,WorkflowHub.Api.DTOs.UpdateUserRequest)">
+            <summary>
+            Updates user details, department, or status.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AdminController.AssignRole(System.Guid,WorkflowHub.Api.DTOs.AssignRoleRequest)">
+            <summary>
+            Assigns or modifies a user's role (Submitter, Reviewer, or Admin).
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AdminController.DeleteUser(System.Guid)">
+            <summary>
+            Deletes a user from the platform and purges assigned references.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AdminController.GetSystemStats">
+            <summary>
+            Returns live system telemetry, database health, and storage utilization.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AdminController.GetSystemLogs(System.String)">
+            <summary>
+            Returns recent system-level audit logs and telemetry events.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AdminController.BroadcastNotification(WorkflowHub.Api.DTOs.BroadcastMessageRequest)">
+            <summary>
+            Broadcasts an urgent system-wide notification to all connected clients over SignalR.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AdminController.SyncStorage">
+            <summary>
+            Reconciles storage objects between database records and the active storage provider.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AuthController.GetAvailableUsers">
+            <summary>
+            Returns demo user profiles to easily toggle between Submitter and Reviewer roles in the UI.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.AuthController.Login(WorkflowHub.Api.DTOs.LoginRequest)">
+            <summary>
+            Simplified mock token generator for local/demo login
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.DocumentController.GetDocuments(System.Nullable{WorkflowHub.Api.Models.DocumentStatus},System.String,System.String,System.Nullable{System.Guid})">
+            <summary>
+            Returns paginated/filtered list of documents with audit metadata and comment counts.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.DocumentController.GetDashboardStats">
+            <summary>
+            Gets document summary metrics for the real-time analytics bar.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.DocumentController.GetDocumentById(System.Guid)">
+            <summary>
+            Gets a single document by its GUID with full comment thread and audit logs.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.DocumentController.CreateDocument(WorkflowHub.Api.DTOs.DocumentCreateRequest,System.Nullable{System.Guid})">
+            <summary>
+            Registers a newly uploaded document and broadcasts a real-time SignalR alert to reviewers.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.DocumentController.UpdateStatus(System.Guid,WorkflowHub.Api.DTOs.DocumentStatusChangeRequest,System.String)">
+            <summary>
+            Updates workflow state (e.g. Under Review, Approved, Changes Requested, Rejected) and notifies submitter.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.DocumentController.ReviseDocument(System.Guid,WorkflowHub.Api.DTOs.DocumentReviseRequest,System.String)">
+            <summary>
+            Re-uploads and submits a revised version of a document when ChangesRequested.
+            Increments the version number and resets status to Submitted.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.DocumentController.AddComment(System.Guid,WorkflowHub.Api.DTOs.AddCommentRequest,System.String)">
+            <summary>
+            Adds a real-time review comment to the document thread.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.StorageController.GetStorageInfo">
+            <summary>
+            Returns the active storage provider diagnostics, whether AWS S3 is configured, and limits.
+            Used for frontend environment awareness and interview demonstrations.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.StorageController.GeneratePresignedUploadUrl(WorkflowHub.Api.DTOs.PresignedUploadRequest)">
+            <summary>
+            Generates a time-limited Pre-Signed Upload URL for S3 or a direct endpoint for LocalFiles fallback.
+            This bypasses the API for S3 uploads, eliminating server bandwidth bottlenecks.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.StorageController.GenerateDownloadUrl(System.String,System.String,System.String)">
+            <summary>
+            Generates download link for document - returns S3 pre-signed GET URL or local streaming download route.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.StorageController.HandleLocalUpload(System.String)">
+            <summary>
+            Local Filesystem fallback upload handler. Invoked when AWS credentials are absent.
+            Streams raw binary payload directly to local disk without buffering into RAM.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Controllers.StorageController.HandleLocalDownload(System.String,System.String)">
+            <summary>
+            Streams file directly from the LocalFiles storage directory.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Hubs.DocumentHub.JoinDocumentRoom(System.String)">
+            <summary>
+            Joins a specific document's real-time discussion and update room.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Hubs.DocumentHub.LeaveDocumentRoom(System.String)">
+            <summary>
+            Leaves a document's real-time discussion room.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Hubs.DocumentHub.JoinReviewerQueue">
+            <summary>
+            Subscribes to reviewer-specific workflow notifications.
+            </summary>
+        </member>
+        <member name="T:WorkflowHub.Api.Migrations.AddDocumentVersionsTable">
+            <inheritdoc />
+        </member>
+        <member name="M:WorkflowHub.Api.Migrations.AddDocumentVersionsTable.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:WorkflowHub.Api.Migrations.AddDocumentVersionsTable.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:WorkflowHub.Api.Migrations.AddDocumentVersionsTable.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:WorkflowHub.Api.Services.IStorageService.GenerateUploadUrlAsync(WorkflowHub.Api.DTOs.PresignedUploadRequest,System.String)">
+            <summary>
+            Generates a direct pre-signed upload URL for S3 or a local fallback upload route.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Services.IStorageService.GenerateDownloadUrlAsync(System.String,System.String,System.String)">
+            <summary>
+            Generates a pre-signed download URL or local download route.
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Services.IStorageService.SaveFileStreamAsync(System.String,System.IO.Stream,System.String)">
+            <summary>
+            Handles physical file upload stream directly (used primarily for LocalFiles fallback).
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Services.IStorageService.GetFileStreamAsync(System.String)">
+            <summary>
+            Retrieves file stream (for LocalFiles download proxy or verification).
+            </summary>
+        </member>
+        <member name="M:WorkflowHub.Api.Services.IStorageService.DeleteFileAsync(System.String)">
+            <summary>
+            Deletes the file asset from the underlying storage.
+            </summary>
+        </member>
+    </members>
+</doc>

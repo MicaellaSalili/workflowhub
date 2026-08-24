@@ -125,7 +125,10 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<AppDbContext>();
         logger.LogInformation("Ensuring PostgreSQL database schema is migrated...");
-        context.Database.EnsureCreated();
+        
+        // --- FIX IS HERE: Change EnsureCreated to Migrate ---
+        context.Database.Migrate(); 
+        
         logger.LogInformation("PostgreSQL schema successfully verified.");
     }
     catch (Exception ex)

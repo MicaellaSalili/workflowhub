@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WorkflowHub.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8c06add3a76fedf6f2cdc5e0c98258855104dd09")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+af0843207f9f204bf5839a8bfadc2863cf7d9988")]
 [assembly: System.Reflection.AssemblyProductAttribute("WorkflowHub.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WorkflowHub.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
