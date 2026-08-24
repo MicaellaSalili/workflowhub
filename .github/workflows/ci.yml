@@ -45,8 +45,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json' # The ** tells it to search all folders
+          # Make sure there is NO "cache: 'npm'" line here at all!
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
